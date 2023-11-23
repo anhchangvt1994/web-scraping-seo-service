@@ -11,7 +11,7 @@ const CLUSTER_INSTANCES =
 const CLUSTER_KILL_TIMEOUT =
 	process.env.CLUSTER_INSTANCES === 'max' ? 7000 : 1600
 
-const distPath = resourceExtension === 'js' ? 'server/dist' : 'server/src'
+const distPath = resourceExtension === 'js' ? 'dist' : 'src'
 
 // connect to pm2 daemon
 pm2.connect(false, (err) => {
@@ -34,8 +34,7 @@ pm2.connect(false, (err) => {
 			let counter = 0
 			for (const process of processList) {
 				if (
-					(process.name === 'start-puppeteer-ssr' ||
-						process.name === 'puppeteer-ssr') &&
+					process.name === 'web-scraping-seo-service' &&
 					process.pm_id !== undefined
 				) {
 					pm2.restart(process.pm_id, function (err) {
@@ -56,7 +55,7 @@ pm2.connect(false, (err) => {
 		if (!hasRestarted) {
 			pm2.start(
 				{
-					name: 'puppeteer-ssr',
+					name: 'web-scraping-seo-service',
 					script: `${distPath}/index.uws.${resourceExtension}`,
 					instances: CLUSTER_INSTANCES,
 					exec_mode: 'cluster',
@@ -85,7 +84,7 @@ pm2.connect(false, (err) => {
 					) // /$^/ is match nothing
 
 					watcher.on('change', function (files) {
-						pm2.reload('puppeteer-ssr', () => {})
+						pm2.reload('web-scraping-seo-service', () => {})
 					})
 				}
 			)

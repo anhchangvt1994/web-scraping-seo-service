@@ -8,7 +8,7 @@
 	"license": "ISC",
 	"scripts": {
 		"start": "npx cross-env ENV=production MAX_WORKERS=7 node dist/index.uws.js",
-		"start:pm2": "npx cross-env ENV=production MAX_WORKERS=7 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr:uws",
+		"start:pm2": "npx cross-env ENV=production MAX_WORKERS=7 CLUSTER_INSTANCES=3 npm run pm2-puppeteer-ssr:uws",
 		"dev": "npx cross-env PORT=9090 ENV=developer MAX_WORKERS=7 node -r sucrase/register src/index.ts",
 		"dev:fastify": "npx cross-env PORT=9090 ENV=developer MAX_WORKERS=7 node -r sucrase/register src/index.fastify.ts",
 		"dev:uws": "npx cross-env PORT=9090 ENV=developer MAX_WORKERS=7 node -r sucrase/register src/index.uws.ts",
