@@ -1,0 +1,12 @@
+.DS_Store
+dist
+package-lock.json
+yarn.lock
+bun.lockb
+node_modules
+*.DS_Store
+**/server-info.json
+**/user_data*
+**/.cache
+**/utils/Cache.worker/pages/*.html
+.cache
