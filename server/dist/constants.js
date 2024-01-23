@@ -1,69 +1,69 @@
-import PROCESS_ENV from "./utils/InitProcessEnv";
-import fs from "fs";
-import path from "path";
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _InitProcessEnv = require('./utils/InitProcessEnv'); var _InitProcessEnv2 = _interopRequireDefault(_InitProcessEnv);
+var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+var _path = require('path'); var _path2 = _interopRequireDefault(_path);
 
-const serverInfoPath = path.resolve(__dirname, "../server-info.json");
+const serverInfoPath = _path2.default.resolve(__dirname, "../server-info.json");
 
 let serverInfoStringify;
 
-if (fs.existsSync(serverInfoPath)) {
-  serverInfoStringify = fs.readFileSync(serverInfoPath);
+if (_fs2.default.existsSync(serverInfoPath)) {
+  serverInfoStringify = _fs2.default.readFileSync(serverInfoPath);
 }
 
 let serverInfo;
 if (serverInfoStringify) {
   try {
-    serverInfo = JSON.parse(serverInfoStringify) || {};
+    serverInfo = exports.serverInfo = JSON.parse(serverInfoStringify) || {};
 
-    if (PROCESS_ENV.IS_SERVER)
-      serverInfo.isServer = Boolean(PROCESS_ENV.IS_SERVER);
+    if (_InitProcessEnv2.default.IS_SERVER)
+      serverInfo.isServer = Boolean(_InitProcessEnv2.default.IS_SERVER);
   } catch (err) {
     console.error(err);
   }
 }
 
-export { serverInfo };
+exports.serverInfo = serverInfo;
 
-export const pagesPath =
+ const pagesPath =
   !serverInfo || serverInfo.isServer
     ? (() => {
         const tmpPath = "/tmp";
-        if (fs.existsSync(tmpPath)) return tmpPath + "/pages";
+        if (_fs2.default.existsSync(tmpPath)) return tmpPath + "/pages";
 
-        return path.resolve(
+        return _path2.default.resolve(
           __dirname,
           "./puppeteer-ssr/utils/Cache.worker/pages"
         );
       })()
-    : path.resolve(__dirname, "./puppeteer-ssr/utils/Cache.worker/pages");
+    : _path2.default.resolve(__dirname, "./puppeteer-ssr/utils/Cache.worker/pages"); exports.pagesPath = pagesPath;
 
-export const userDataPath =
+ const userDataPath =
   !serverInfo || serverInfo.isServer
     ? (() => {
         const tmpPath = "/tmp";
-        if (fs.existsSync(tmpPath)) return tmpPath + "/browsers";
+        if (_fs2.default.existsSync(tmpPath)) return tmpPath + "/browsers";
 
-        return path.resolve(__dirname, "./puppeteer-ssr/browsers");
+        return _path2.default.resolve(__dirname, "./puppeteer-ssr/browsers");
       })()
-    : path.resolve(__dirname, "./puppeteer-ssr/browsers");
+    : _path2.default.resolve(__dirname, "./puppeteer-ssr/browsers"); exports.userDataPath = userDataPath;
 
-export const resourceExtension =
-  !serverInfo || serverInfo.isServer ? "js" : "ts";
+ const resourceExtension =
+  !serverInfo || serverInfo.isServer ? "js" : "ts"; exports.resourceExtension = resourceExtension;
 
-export const SERVER_LESS = !!PROCESS_ENV.SERVER_LESS;
+ const SERVER_LESS = !!_InitProcessEnv2.default.SERVER_LESS; exports.SERVER_LESS = SERVER_LESS;
 
-export const ENV = (
-  ["development", "production"].includes(PROCESS_ENV.ENV as string)
-    ? PROCESS_ENV.ENV
+ const ENV = (
+  ["development", "production"].includes(_InitProcessEnv2.default.ENV )
+    ? _InitProcessEnv2.default.ENV
     : "production"
-) as "development" | "production";
-export const MODE = (
-  ["development", "preview", "production"].includes(PROCESS_ENV.MODE as string)
-    ? PROCESS_ENV.MODE
-    : PROCESS_ENV.ENV === "development"
+) ; exports.ENV = ENV;
+ const MODE = (
+  ["development", "preview", "production"].includes(_InitProcessEnv2.default.MODE )
+    ? _InitProcessEnv2.default.MODE
+    : _InitProcessEnv2.default.ENV === "development"
     ? "development"
     : "production"
-) as "development" | "preview" | "production";
+) ; exports.MODE = MODE;
 
 const envModeList = {
   // NOTE - This means you can debug staging and production in development environment
@@ -76,13 +76,13 @@ const envModeList = {
   production_preview: "uat",
   production_production: "production",
 };
-export const ENV_MODE = envModeList[`${ENV}_${MODE}`] as
-  | "development"
-  | "staging"
-  | "uat"
-  | "production";
+ const ENV_MODE = envModeList[`${exports.ENV}_${exports.MODE}`] 
 
-export const LOCALE_LIST_WITH_COUNTRY = {
+
+
+; exports.ENV_MODE = ENV_MODE;
+
+ const LOCALE_LIST_WITH_COUNTRY = {
   af: ["en"],
   al: ["sq"],
   dz: ["ar"],
@@ -276,9 +276,9 @@ export const LOCALE_LIST_WITH_COUNTRY = {
   ye: ["ar"],
   zm: ["en"],
   zw: ["en"],
-};
+}; exports.LOCALE_LIST_WITH_COUNTRY = LOCALE_LIST_WITH_COUNTRY;
 
-export const LOCALE_LIST_WITH_LANGUAGE = {
+ const LOCALE_LIST_WITH_LANGUAGE = {
   en: [
     "ag",
     "ar",
@@ -441,30 +441,30 @@ export const LOCALE_LIST_WITH_LANGUAGE = {
   uk: ["ua"],
   uz: ["uz"],
   vi: ["vn"],
-};
+}; exports.LOCALE_LIST_WITH_LANGUAGE = LOCALE_LIST_WITH_LANGUAGE;
 
-export const COUNTRY_CODE_DEFAULT = "us";
-export const LANGUAGE_CODE_DEFAULT = "en";
-export const ENABLE_CONSOLE_DEBUGGER = Boolean(
-  PROCESS_ENV.ENABLE_CONSOLE_DEBUGGER
-);
-export const POWER_LEVEL = PROCESS_ENV.POWER_LEVEL
-  ? Number(PROCESS_ENV.POWER_LEVEL)
-  : 3;
-export const enum POWER_LEVEL_LIST {
-  ONE = 1, // low of scraping power
-  TWO = 2, // medium of scraping power
-  THREE = 3, // hight of scraping power
-}
-export const BANDWIDTH_LEVEL = PROCESS_ENV.BANDWIDTH_LEVEL
-  ? Number(PROCESS_ENV.BANDWIDTH_LEVEL)
-  : 2;
-export const enum BANDWIDTH_LEVEL_LIST {
-  ONE = 1, // low
-  TWO = 2, // hight
-}
-export const COOKIE_EXPIRED =
-  BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO && ENV !== "development"
+ const COUNTRY_CODE_DEFAULT = "us"; exports.COUNTRY_CODE_DEFAULT = COUNTRY_CODE_DEFAULT;
+ const LANGUAGE_CODE_DEFAULT = "en"; exports.LANGUAGE_CODE_DEFAULT = LANGUAGE_CODE_DEFAULT;
+ const ENABLE_CONSOLE_DEBUGGER = Boolean(
+  _InitProcessEnv2.default.ENABLE_CONSOLE_DEBUGGER
+); exports.ENABLE_CONSOLE_DEBUGGER = ENABLE_CONSOLE_DEBUGGER;
+ const POWER_LEVEL = _InitProcessEnv2.default.POWER_LEVEL
+  ? Number(_InitProcessEnv2.default.POWER_LEVEL)
+  : 3; exports.POWER_LEVEL = POWER_LEVEL;
+var POWER_LEVEL_LIST; (function (POWER_LEVEL_LIST) {
+  const ONE = 1; POWER_LEVEL_LIST[POWER_LEVEL_LIST["ONE"] = ONE] = "ONE"; // low of scraping power
+  const TWO = 2; POWER_LEVEL_LIST[POWER_LEVEL_LIST["TWO"] = TWO] = "TWO"; // medium of scraping power
+  const THREE = 3; POWER_LEVEL_LIST[POWER_LEVEL_LIST["THREE"] = THREE] = "THREE"; // hight of scraping power
+})(POWER_LEVEL_LIST || (exports.POWER_LEVEL_LIST = POWER_LEVEL_LIST = {}));
+ const BANDWIDTH_LEVEL = _InitProcessEnv2.default.BANDWIDTH_LEVEL
+  ? Number(_InitProcessEnv2.default.BANDWIDTH_LEVEL)
+  : 2; exports.BANDWIDTH_LEVEL = BANDWIDTH_LEVEL;
+var BANDWIDTH_LEVEL_LIST; (function (BANDWIDTH_LEVEL_LIST) {
+  const ONE = 1; BANDWIDTH_LEVEL_LIST[BANDWIDTH_LEVEL_LIST["ONE"] = ONE] = "ONE"; // low
+  const TWO = 2; BANDWIDTH_LEVEL_LIST[BANDWIDTH_LEVEL_LIST["TWO"] = TWO] = "TWO"; // hight
+})(BANDWIDTH_LEVEL_LIST || (exports.BANDWIDTH_LEVEL_LIST = BANDWIDTH_LEVEL_LIST = {}));
+ const COOKIE_EXPIRED =
+  exports.BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO && exports.ENV !== "development"
     ? 2000
-    : 60000;
-export const IS_REMOTE_CRAWLER = Boolean(PROCESS_ENV.IS_REMOTE_CRAWLER);
+    : 60000; exports.COOKIE_EXPIRED = COOKIE_EXPIRED;
+ const IS_REMOTE_CRAWLER = Boolean(_InitProcessEnv2.default.IS_REMOTE_CRAWLER); exports.IS_REMOTE_CRAWLER = IS_REMOTE_CRAWLER;

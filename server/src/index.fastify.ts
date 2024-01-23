@@ -15,14 +15,15 @@ import {
   serverInfo,
 } from "./constants";
 import ServerConfig from "./server.config";
+import { getStore, setStore } from "./store";
 import { setCookie } from "./utils/CookieHandler";
 import detectBot from "./utils/DetectBot";
 import detectDevice from "./utils/DetectDevice";
 import detectLocale from "./utils/DetectLocale";
 import DetectRedirect from "./utils/DetectRedirect";
 import detectStaticExtension from "./utils/DetectStaticExtension";
+import PROCESS_ENV from "./utils/InitProcessEnv";
 import sendFile from "./utils/SendFile";
-import { getStore, setStore } from "./store";
 
 const dotenv = require("dotenv");
 dotenv.config({
@@ -64,13 +65,13 @@ const startServer = async () => {
   await cleanResourceWithCondition();
   let port =
     ENV !== "development"
-      ? process.env.PORT || getPort("PUPPETEER_SSR_PORT")
+      ? PROCESS_ENV.PORT || getPort("PUPPETEER_SSR_PORT")
       : getPort("PUPPETEER_SSR_PORT");
-  port = await findFreePort(port || process.env.PUPPETEER_SSR_PORT || 8080);
+  port = await findFreePort(port || PROCESS_ENV.PUPPETEER_SSR_PORT || 8080);
   setPort(port, "PUPPETEER_SSR_PORT");
 
   if (ENV !== "development") {
-    process.env.PORT = port;
+    PROCESS_ENV.PORT = port;
   }
 
   const app = fastify();
@@ -81,7 +82,7 @@ const startServer = async () => {
 
   app.use(cors());
 
-  if (ServerConfig.crawler && !process.env.IS_REMOTE_CRAWLER) {
+  if (ServerConfig.crawler && !PROCESS_ENV.IS_REMOTE_CRAWLER) {
     app
       .use("/robots.txt", serveStatic(path.resolve(__dirname, "../robots.txt")))
       .use(function (req, res, next) {
@@ -109,8 +110,8 @@ const startServer = async () => {
 
   app
     .use(function (req, res, next) {
-      if (!process.env.BASE_URL)
-        process.env.BASE_URL = `${req.protocol}://${req.hostname}`;
+      if (!PROCESS_ENV.BASE_URL)
+        PROCESS_ENV.BASE_URL = `${req.protocol}://${req.hostname}`;
       next();
     })
     .use(function (req, res, next) {
@@ -124,7 +125,7 @@ const startServer = async () => {
         `BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
       );
 
-      if (!process.env.IS_REMOTE_CRAWLER) {
+      if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
         const headersStore = getStore("headers");
         headersStore.botInfo = botInfo;
         setStore("headers", headersStore);
@@ -157,7 +158,7 @@ const startServer = async () => {
         )};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
       );
 
-      if (!process.env.IS_REMOTE_CRAWLER) {
+      if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
         const headersStore = getStore("headers");
         headersStore.localeInfo = JSON.stringify(localeInfo);
         setStore("headers", headersStore);
@@ -182,7 +183,7 @@ const startServer = async () => {
       }
       next();
     });
-  if (!process.env.IS_REMOTE_CRAWLER) {
+  if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
     app.use(function (req, res, next) {
       const redirectResult = DetectRedirect(req, res);
 
@@ -226,7 +227,7 @@ const startServer = async () => {
         `DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
       );
 
-      if (!process.env.IS_REMOTE_CRAWLER) {
+      if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
         const headersStore = getStore("headers");
         headersStore.deviceInfo = deviceInfo;
         setStore("headers", headersStore);
@@ -251,7 +252,7 @@ const startServer = async () => {
     process.exit(0);
   });
 
-  if (!process.env.IS_REMOTE_CRAWLER) {
+  if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
     if (ENV === "development") {
       // NOTE - restart server onchange
       // const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
@@ -259,7 +260,7 @@ const startServer = async () => {
       // 	persistent: true,
       // })
 
-      if (!process.env.REFRESH_SERVER) {
+      if (!PROCESS_ENV.REFRESH_SERVER) {
         spawn("vite", [], {
           stdio: "inherit",
           shell: true,
