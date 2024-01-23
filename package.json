@@ -1,36 +1,35 @@
 {
-	"private": true,
-	"name": "server",
-	"version": "1.0.0",
-	"description": "server",
-	"main": "index.ts",
-	"author": "",
-	"license": "ISC",
-	"scripts": {
-		"start": "npx cross-env ENV=production MAX_WORKERS=7 node dist/index.uws.js",
-		"start:pm2": "npx cross-env ENV=production MAX_WORKERS=7 CLUSTER_INSTANCES=3 npm run pm2-puppeteer-ssr:uws",
-		"dev": "npx cross-env PORT=9090 ENV=developer MAX_WORKERS=7 node -r sucrase/register src/index.ts",
-		"dev:fastify": "npx cross-env PORT=9090 ENV=developer MAX_WORKERS=7 node -r sucrase/register src/index.fastify.ts",
-		"dev:uws": "npx cross-env PORT=9090 ENV=developer MAX_WORKERS=7 node -r sucrase/register src/index.uws.ts",
-		"preview": "npx cross-env ENV=production ENABLE_CONSOLE_DEBUGGER=true MAX_WORKERS=7 node dist/index.uws.js",
-		"pm2-puppeteer-ssr:uws": "node --require sucrase/register src/puppeteer-ssr/pm2.uws.ts",
-		"build": "npx sucrase --quiet ./src -d ./dist --transforms typescript,imports",
-		"preinstall": "node src/utils/GenerateServerInfo.js && node src/puppeteer-ssr/utils/CreatePuppeteerConfigFile.js"
-	},
-	"engines": {
-		"node": ">=18.18.x"
-	},
-	"dependencies": {
-		"@fastify/middie": "^8.3.0",
-		"@types/express": "^4.17.17",
-		"cors": "^2.8.5",
-		"express": "^4.18.2",
-		"fastify": "^4.23.0",
-		"pm2": "^5.3.0",
-		"uWebSockets.js": "uNetworking/uWebSockets.js#v20.34.0",
-		"workerpool": "^8.0.0",
-		"sucrase": "^3.33.0",
-		"cross-env": "^7.0.3",
-		"puppeteer-ssr": "file:./src/puppeteer-ssr"
-	}
+  "name": "remote-crawler-service",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "start": "npx cross-env MAX_WORKERS=7 node server/dist/index.uws.js",
+    "start:pm2": "cross-env ENV=production MAX_WORKERS=7 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr:uws",
+    "preview": "cross-env ENV=production npm run start-preview",
+    "preview:fastify": "cross-env MODE=preview ENV=production npm run start-preview:fastify",
+    "preview:uws": "cross-env MODE=preview ENV=production npm run start-preview:uws",
+    "start-preview": "cross-env RESET_RESOURCE=true MAX_WORKERS=7 node -r sucrase/register server/src/index.ts",
+    "start-preview:fastify": "cross-env RESET_RESOURCE=true MAX_WORKERS=7 node -r sucrase/register server/src/index.fastify.ts",
+    "start-preview:uws": "cross-env RESET_RESOURCE=true MAX_WORKERS=7 node -r sucrase/register server/src/index.uws.ts",
+    "pm2-puppeteer-ssr": "node --require sucrase/register server/src/puppeteer-ssr/pm2.ts",
+    "pm2-puppeteer-ssr:fastify": "node --require sucrase/register server/src/puppeteer-ssr/pm2.fastify.ts",
+    "pm2-puppeteer-ssr:uws": "node --require sucrase/register server/src/puppeteer-ssr/pm2.uws.ts",
+    "server-build": "npx sucrase --quiet ./server/src -d ./server/dist --transforms typescript,imports",
+    "pre-commit": "npm run server-build && git add ./server/dist",
+    "prepare": "git config core.autocrlf false",
+    "preinstall": "node server/src/utils/GenerateServerInfo.js && node server/src/puppeteer-ssr/utils/CreatePuppeteerConfigFile.js"
+  },
+  "engines": {
+    "node": ">=18.18.x"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "server": "file:./server",
+    "build-tool-packages": "file:./config/build-tool-packages"
+  }
 }

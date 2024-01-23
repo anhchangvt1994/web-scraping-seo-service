@@ -1,1 +1,0 @@
-# web-scraping-seo-service
