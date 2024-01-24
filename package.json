@@ -5,7 +5,7 @@
   "scripts": {
     "start": "npx cross-env MAX_WORKERS=7 node server/dist/index.uws.js",
     "start:pm2": "npx cross-env ENV=production MAX_WORKERS=7 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr:uws",
-    "preview": "npx cross-env ENV=production npm run start-preview",
+    "preview": "npx cross-env MODE=development ENV=production npm run start-preview",
     "preview:fastify": "npx cross-env MODE=development ENV=production npm run start-preview:fastify",
     "preview:uws": "npx cross-env MODE=development ENV=production npm run start-preview:uws",
     "start-preview": "npx cross-env RESET_RESOURCE=true MAX_WORKERS=7 node -r sucrase/register server/src/index.ts",
