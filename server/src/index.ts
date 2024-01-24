@@ -3,15 +3,7 @@ import cors from "cors";
 import express from "express";
 import path from "path";
 import { findFreePort, getPort, setPort } from "../../config/utils/PortHandler";
-import {
-  COOKIE_EXPIRED,
-  ENV,
-  ENV_MODE,
-  MODE,
-  pagesPath,
-  resourceExtension,
-  serverInfo,
-} from "./constants";
+import { COOKIE_EXPIRED, pagesPath, resourceExtension } from "./constants";
 import { getStore, setStore } from "./store";
 import { setCookie } from "./utils/CookieHandler";
 import detectBot from "./utils/DetectBot";
@@ -19,19 +11,7 @@ import detectDevice from "./utils/DetectDevice";
 import detectLocale from "./utils/DetectLocale";
 import DetectRedirect from "./utils/DetectRedirect";
 import detectStaticExtension from "./utils/DetectStaticExtension";
-import PROCESS_ENV from "./utils/InitProcessEnv";
-
-const dotenv = require("dotenv");
-dotenv.config({
-  path: path.resolve(__dirname, "../.env"),
-});
-
-if (ENV_MODE !== "development") {
-  dotenv.config({
-    path: path.resolve(__dirname, "../.env.production"),
-    override: true,
-  });
-}
+import { ENV, MODE, ENV_MODE, PROCESS_ENV } from "./utils/InitEnv";
 
 const ServerConfig = require("./server.config")?.default ?? {};
 
@@ -274,7 +254,7 @@ const startServer = async () => {
       // 	)
       // 	process.exit(0)
       // })
-    } else if (!serverInfo.isServer) {
+    } else if (!PROCESS_ENV.IS_SERVER) {
       spawn("vite", ["preview"], {
         stdio: "inherit",
         shell: true,

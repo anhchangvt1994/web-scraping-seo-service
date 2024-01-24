@@ -5,15 +5,7 @@ import fastify from "fastify";
 import path from "path";
 import serveStatic from "serve-static";
 import { findFreePort, getPort, setPort } from "../../config/utils/PortHandler";
-import {
-  COOKIE_EXPIRED,
-  ENV,
-  ENV_MODE,
-  MODE,
-  pagesPath,
-  resourceExtension,
-  serverInfo,
-} from "./constants";
+import { COOKIE_EXPIRED, pagesPath, resourceExtension } from "./constants";
 import ServerConfig from "./server.config";
 import { getStore, setStore } from "./store";
 import { setCookie } from "./utils/CookieHandler";
@@ -22,20 +14,8 @@ import detectDevice from "./utils/DetectDevice";
 import detectLocale from "./utils/DetectLocale";
 import DetectRedirect from "./utils/DetectRedirect";
 import detectStaticExtension from "./utils/DetectStaticExtension";
-import PROCESS_ENV from "./utils/InitProcessEnv";
+import { ENV, MODE, ENV_MODE, PROCESS_ENV } from "./utils/InitEnv";
 import sendFile from "./utils/SendFile";
-
-const dotenv = require("dotenv");
-dotenv.config({
-  path: path.resolve(__dirname, "../.env"),
-});
-
-if (ENV_MODE !== "development") {
-  dotenv.config({
-    path: path.resolve(__dirname, "../.env.production"),
-    override: true,
-  });
-}
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000;
 const ENVIRONMENT = JSON.stringify({
@@ -284,7 +264,7 @@ const startServer = async () => {
       // 	})
       // 	process.exit(0)
       // })
-    } else if (!serverInfo.isServer) {
+    } else if (!PROCESS_ENV.IS_SERVER) {
       spawn("vite", ["preview"], {
         stdio: "inherit",
         shell: true,

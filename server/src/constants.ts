@@ -1,86 +1,31 @@
-import PROCESS_ENV from "./utils/InitProcessEnv";
+import { PROCESS_ENV, ENV } from "./utils/InitEnv";
 import fs from "fs";
 import path from "path";
 
-const serverInfoPath = path.resolve(__dirname, "../server-info.json");
+export const pagesPath = PROCESS_ENV.IS_SERVER
+  ? (() => {
+      const tmpPath = "/tmp";
+      if (fs.existsSync(tmpPath)) return tmpPath + "/pages";
 
-let serverInfoStringify;
+      return path.resolve(
+        __dirname,
+        "./puppeteer-ssr/utils/Cache.worker/pages"
+      );
+    })()
+  : path.resolve(__dirname, "./puppeteer-ssr/utils/Cache.worker/pages");
 
-if (fs.existsSync(serverInfoPath)) {
-  serverInfoStringify = fs.readFileSync(serverInfoPath);
-}
+export const userDataPath = PROCESS_ENV.IS_SERVER
+  ? (() => {
+      const tmpPath = "/tmp";
+      if (fs.existsSync(tmpPath)) return tmpPath + "/browsers";
 
-let serverInfo;
-if (serverInfoStringify) {
-  try {
-    serverInfo = JSON.parse(serverInfoStringify) || {};
+      return path.resolve(__dirname, "./puppeteer-ssr/browsers");
+    })()
+  : path.resolve(__dirname, "./puppeteer-ssr/browsers");
 
-    if (PROCESS_ENV.IS_SERVER)
-      serverInfo.isServer = Boolean(PROCESS_ENV.IS_SERVER);
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-export { serverInfo };
-
-export const pagesPath =
-  !serverInfo || serverInfo.isServer
-    ? (() => {
-        const tmpPath = "/tmp";
-        if (fs.existsSync(tmpPath)) return tmpPath + "/pages";
-
-        return path.resolve(
-          __dirname,
-          "./puppeteer-ssr/utils/Cache.worker/pages"
-        );
-      })()
-    : path.resolve(__dirname, "./puppeteer-ssr/utils/Cache.worker/pages");
-
-export const userDataPath =
-  !serverInfo || serverInfo.isServer
-    ? (() => {
-        const tmpPath = "/tmp";
-        if (fs.existsSync(tmpPath)) return tmpPath + "/browsers";
-
-        return path.resolve(__dirname, "./puppeteer-ssr/browsers");
-      })()
-    : path.resolve(__dirname, "./puppeteer-ssr/browsers");
-
-export const resourceExtension =
-  !serverInfo || serverInfo.isServer ? "js" : "ts";
+export const resourceExtension = PROCESS_ENV.IS_SERVER ? "js" : "ts";
 
 export const SERVER_LESS = !!PROCESS_ENV.SERVER_LESS;
-
-export const ENV = (
-  ["development", "production"].includes(PROCESS_ENV.ENV as string)
-    ? PROCESS_ENV.ENV
-    : "production"
-) as "development" | "production";
-export const MODE = (
-  ["development", "preview", "production"].includes(PROCESS_ENV.MODE as string)
-    ? PROCESS_ENV.MODE
-    : PROCESS_ENV.ENV === "development"
-    ? "development"
-    : "production"
-) as "development" | "preview" | "production";
-
-const envModeList = {
-  // NOTE - This means you can debug staging and production in development environment
-  development_development: "development",
-  development_preview: "staging",
-  development_production: "production",
-
-  // NOTE - This means your final environment you need to deploy
-  production_development: "staging",
-  production_preview: "uat",
-  production_production: "production",
-};
-export const ENV_MODE = envModeList[`${ENV}_${MODE}`] as
-  | "development"
-  | "staging"
-  | "uat"
-  | "production";
 
 export const LOCALE_LIST_WITH_COUNTRY = {
   af: ["en"],

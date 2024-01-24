@@ -2,27 +2,9 @@ import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
 import { findFreePort, getPort, setPort } from "../../config/utils/PortHandler";
-import {
-  ENV,
-  ENV_MODE,
-  pagesPath,
-  resourceExtension,
-  serverInfo,
-} from "./constants";
+import { pagesPath, resourceExtension } from "./constants";
 import ServerConfig from "./server.config";
-import PROCESS_ENV from "./utils/InitProcessEnv";
-
-const dotenv = require("dotenv");
-dotenv.config({
-  path: path.resolve(__dirname, "../.env"),
-});
-
-if (ENV_MODE !== "development") {
-  dotenv.config({
-    path: path.resolve(__dirname, "../.env.production"),
-    override: true,
-  });
-}
+import { ENV, ENV_MODE, PROCESS_ENV } from "./utils/InitEnv";
 
 require("events").EventEmitter.setMaxListeners(200);
 
@@ -120,7 +102,7 @@ const startServer = async () => {
       // 	})
       // 	process.exit(0)
       // })
-    } else if (!serverInfo.isServer) {
+    } else if (!PROCESS_ENV.IS_SERVER) {
       spawn("vite", ["preview"], {
         stdio: "inherit",
         shell: true,

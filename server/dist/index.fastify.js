@@ -5,14 +5,6 @@ var _fastify = require('fastify'); var _fastify2 = _interopRequireDefault(_fasti
 var _path = require('path'); var _path2 = _interopRequireDefault(_path);
 var _servestatic = require('serve-static'); var _servestatic2 = _interopRequireDefault(_servestatic);
 var _PortHandler = require('../../config/utils/PortHandler');
-
-
-
-
-
-
-
-
 var _constants = require('./constants');
 var _serverconfig = require('./server.config'); var _serverconfig2 = _interopRequireDefault(_serverconfig);
 var _store = require('./store');
@@ -22,32 +14,20 @@ var _DetectDevice = require('./utils/DetectDevice'); var _DetectDevice2 = _inter
 var _DetectLocale = require('./utils/DetectLocale'); var _DetectLocale2 = _interopRequireDefault(_DetectLocale);
 var _DetectRedirect = require('./utils/DetectRedirect'); var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect);
 var _DetectStaticExtension = require('./utils/DetectStaticExtension'); var _DetectStaticExtension2 = _interopRequireDefault(_DetectStaticExtension);
-var _InitProcessEnv = require('./utils/InitProcessEnv'); var _InitProcessEnv2 = _interopRequireDefault(_InitProcessEnv);
+var _InitEnv = require('./utils/InitEnv');
 var _SendFile = require('./utils/SendFile'); var _SendFile2 = _interopRequireDefault(_SendFile);
-
-const dotenv = require("dotenv");
-dotenv.config({
-  path: _path2.default.resolve(__dirname, "../.env"),
-});
-
-if (_constants.ENV_MODE !== "development") {
-  dotenv.config({
-    path: _path2.default.resolve(__dirname, "../.env.production"),
-    override: true,
-  });
-}
 
 const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000;
 const ENVIRONMENT = JSON.stringify({
-  ENV: _constants.ENV,
-  MODE: _constants.MODE,
-  ENV_MODE: _constants.ENV_MODE,
+  ENV: _InitEnv.ENV,
+  MODE: _InitEnv.MODE,
+  ENV_MODE: _InitEnv.ENV_MODE,
 });
 
 require("events").EventEmitter.setMaxListeners(200);
 
 const cleanResourceWithCondition = async () => {
-  if (_constants.ENV_MODE === "development") {
+  if (_InitEnv.ENV_MODE === "development") {
     // NOTE - Clean Browsers and Pages after start / restart
     const {
       deleteResource,
@@ -64,14 +44,14 @@ const cleanResourceWithCondition = async () => {
 const startServer = async () => {
   await cleanResourceWithCondition();
   let port =
-    _constants.ENV !== "development"
-      ? _InitProcessEnv2.default.PORT || _PortHandler.getPort.call(void 0, "PUPPETEER_SSR_PORT")
+    _InitEnv.ENV !== "development"
+      ? _InitEnv.PROCESS_ENV.PORT || _PortHandler.getPort.call(void 0, "PUPPETEER_SSR_PORT")
       : _PortHandler.getPort.call(void 0, "PUPPETEER_SSR_PORT");
-  port = await _PortHandler.findFreePort.call(void 0, port || _InitProcessEnv2.default.PUPPETEER_SSR_PORT || 8080);
+  port = await _PortHandler.findFreePort.call(void 0, port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080);
   _PortHandler.setPort.call(void 0, port, "PUPPETEER_SSR_PORT");
 
-  if (_constants.ENV !== "development") {
-    _InitProcessEnv2.default.PORT = port;
+  if (_InitEnv.ENV !== "development") {
+    _InitEnv.PROCESS_ENV.PORT = port;
   }
 
   const app = _fastify2.default.call(void 0, );
@@ -82,7 +62,7 @@ const startServer = async () => {
 
   app.use(_cors2.default.call(void 0, ));
 
-  if (_serverconfig2.default.crawler && !_InitProcessEnv2.default.IS_REMOTE_CRAWLER) {
+  if (_serverconfig2.default.crawler && !_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
     app
       .use("/robots.txt", _servestatic2.default.call(void 0, _path2.default.resolve(__dirname, "../robots.txt")))
       .use(function (req, res, next) {
@@ -97,7 +77,7 @@ const startServer = async () => {
         if (isStatic) {
           const filePath = _path2.default.resolve(__dirname, `../../dist/${req.url}`);
 
-          if (_constants.ENV !== "development") {
+          if (_InitEnv.ENV !== "development") {
             res.setHeader("Cache-Control", "public, max-age=31556952");
           }
 
@@ -110,8 +90,8 @@ const startServer = async () => {
 
   app
     .use(function (req, res, next) {
-      if (!_InitProcessEnv2.default.BASE_URL)
-        _InitProcessEnv2.default.BASE_URL = `${req.protocol}://${req.hostname}`;
+      if (!_InitEnv.PROCESS_ENV.BASE_URL)
+        _InitEnv.PROCESS_ENV.BASE_URL = `${req.protocol}://${req.hostname}`;
       next();
     })
     .use(function (req, res, next) {
@@ -125,7 +105,7 @@ const startServer = async () => {
         `BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
       );
 
-      if (!_InitProcessEnv2.default.IS_REMOTE_CRAWLER) {
+      if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
         const headersStore = _store.getStore.call(void 0, "headers");
         headersStore.botInfo = botInfo;
         _store.setStore.call(void 0, "headers", headersStore);
@@ -158,7 +138,7 @@ const startServer = async () => {
         )};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
       );
 
-      if (!_InitProcessEnv2.default.IS_REMOTE_CRAWLER) {
+      if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
         const headersStore = _store.getStore.call(void 0, "headers");
         headersStore.localeInfo = JSON.stringify(localeInfo);
         _store.setStore.call(void 0, "headers", headersStore);
@@ -183,7 +163,7 @@ const startServer = async () => {
       }
       next();
     });
-  if (!_InitProcessEnv2.default.IS_REMOTE_CRAWLER) {
+  if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
     app.use(function (req, res, next) {
       const redirectResult = _DetectRedirect2.default.call(void 0, req, res);
 
@@ -227,7 +207,7 @@ const startServer = async () => {
         `DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
       );
 
-      if (!_InitProcessEnv2.default.IS_REMOTE_CRAWLER) {
+      if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
         const headersStore = _store.getStore.call(void 0, "headers");
         headersStore.deviceInfo = deviceInfo;
         _store.setStore.call(void 0, "headers", headersStore);
@@ -252,15 +232,15 @@ const startServer = async () => {
     process.exit(0);
   });
 
-  if (!_InitProcessEnv2.default.IS_REMOTE_CRAWLER) {
-    if (_constants.ENV === "development") {
+  if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
+    if (_InitEnv.ENV === "development") {
       // NOTE - restart server onchange
       // const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
       // 	ignored: /$^/,
       // 	persistent: true,
       // })
 
-      if (!_InitProcessEnv2.default.REFRESH_SERVER) {
+      if (!_InitEnv.PROCESS_ENV.REFRESH_SERVER) {
         _child_process.spawn.call(void 0, "vite", [], {
           stdio: "inherit",
           shell: true,
@@ -284,7 +264,7 @@ const startServer = async () => {
       // 	})
       // 	process.exit(0)
       // })
-    } else if (!_constants.serverInfo.isServer) {
+    } else if (!_InitEnv.PROCESS_ENV.IS_SERVER) {
       _child_process.spawn.call(void 0, "vite", ["preview"], {
         stdio: "inherit",
         shell: true,

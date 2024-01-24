@@ -6,8 +6,8 @@
     "start": "npx cross-env MAX_WORKERS=7 node server/dist/index.uws.js",
     "start:pm2": "npx cross-env ENV=production MAX_WORKERS=7 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr:uws",
     "preview": "npx cross-env ENV=production npm run start-preview",
-    "preview:fastify": "npx cross-env MODE=preview ENV=production npm run start-preview:fastify",
-    "preview:uws": "npx cross-env MODE=preview ENV=production npm run start-preview:uws",
+    "preview:fastify": "npx cross-env MODE=development ENV=production npm run start-preview:fastify",
+    "preview:uws": "npx cross-env MODE=development ENV=production npm run start-preview:uws",
     "start-preview": "npx cross-env RESET_RESOURCE=true MAX_WORKERS=7 node -r sucrase/register server/src/index.ts",
     "start-preview:fastify": "npx cross-env RESET_RESOURCE=true MAX_WORKERS=7 node -r sucrase/register server/src/index.fastify.ts",
     "start-preview:uws": "npx cross-env RESET_RESOURCE=true MAX_WORKERS=7 node -r sucrase/register server/src/index.uws.ts",
@@ -27,9 +27,11 @@
     "last 2 versions",
     "not dead"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "dotenv": "^16.3.2",
+    "sucrase": "^3.35.0"
+  },
   "devDependencies": {
-    "server": "file:./server",
-    "build-tool-packages": "file:./config/build-tool-packages"
+    "server": "file:./server"
   }
 }
