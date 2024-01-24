@@ -28,7 +28,6 @@
     "not dead"
   ],
   "dependencies": {
-    "dotenv": "^16.3.2",
     "sucrase": "^3.35.0"
   },
   "devDependencies": {
