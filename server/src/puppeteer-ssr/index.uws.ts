@@ -1,349 +1,361 @@
-import fs from 'fs'
-import path from 'path'
-import { HttpResponse, TemplatedApp } from 'uWebSockets.js'
-import { COOKIE_EXPIRED, IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
-import DetectBotMiddle from '../middlewares/uws/DetectBot'
-import DetectDeviceMiddle from '../middlewares/uws/DetectDevice'
-import DetectLocaleMiddle from '../middlewares/uws/DetectLocale'
-import DetectRedirectMiddle from '../middlewares/uws/DetectRedirect'
-import DetectStaticMiddle from '../middlewares/uws/DetectStatic'
-import ServerConfig from '../server.config'
-import { IBotInfo } from '../types'
-import CleanerService from '../utils/CleanerService'
-import Console from '../utils/ConsoleHandler'
-import { ENV, ENV_MODE, MODE, PROCESS_ENV } from '../utils/InitEnv'
-import { CACHEABLE_STATUS_CODE, DISABLE_SSR_CACHE } from './constants'
-import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl.uws'
-import ISRGenerator from './utils/ISRGenerator.next'
-import SSRHandler from './utils/ISRHandler'
+import fs from "fs";
+import path from "path";
+import { HttpResponse, TemplatedApp } from "uWebSockets.js";
+import { COOKIE_EXPIRED, IS_REMOTE_CRAWLER, SERVER_LESS } from "../constants";
+import DetectBotMiddle from "../middlewares/uws/DetectBot";
+import DetectDeviceMiddle from "../middlewares/uws/DetectDevice";
+import DetectLocaleMiddle from "../middlewares/uws/DetectLocale";
+import DetectRedirectMiddle from "../middlewares/uws/DetectRedirect";
+import DetectStaticMiddle from "../middlewares/uws/DetectStatic";
+import ServerConfig from "../server.config";
+import { IBotInfo } from "../types";
+import CleanerService from "../utils/CleanerService";
+import Console from "../utils/ConsoleHandler";
+import { ENV, ENV_MODE, MODE, PROCESS_ENV } from "../utils/InitEnv";
+import { CACHEABLE_STATUS_CODE, DISABLE_SSR_CACHE } from "./constants";
+import { convertUrlHeaderToQueryString, getUrl } from "./utils/ForamatUrl.uws";
+import ISRGenerator from "./utils/ISRGenerator.next";
+import SSRHandler from "./utils/ISRHandler";
 
-const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
-const ENVIRONMENT = JSON.stringify({
-	ENV,
-	MODE,
-	ENV_MODE,
-})
+const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000;
 
 const puppeteerSSRService = (async () => {
-	let _app: TemplatedApp
-	const webScrapingService = 'web-scraping-service'
-	const cleanerService = 'cleaner-service'
+  let _app: TemplatedApp;
+  const webScrapingService = "web-scraping-service";
+  const cleanerService = "cleaner-service";
 
-	const _getResponseWithDefaultCookie = (res: HttpResponse) => {
-		res
-			.writeHeader(
-				'set-cookie',
-				`EnvironmentInfo=${ENVIRONMENT};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
-			.writeHeader(
-				'set-cookie',
-				`BotInfo=${JSON.stringify(
-					res.cookies.botInfo
-				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
-			.writeHeader(
-				'set-cookie',
-				`DeviceInfo=${JSON.stringify(
-					res.cookies.deviceInfo
-				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
-			.writeHeader(
-				'set-cookie',
-				`LocaleInfo=${JSON.stringify(
-					res.cookies.localeInfo
-				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
+  const _getResponseWithDefaultCookie = (res: HttpResponse) => {
+    res
+      .writeHeader(
+        "set-cookie",
+        `EnvironmentInfo=${JSON.stringify(
+          res.cookies.environmentInfo
+        )};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+      )
+      .writeHeader(
+        "set-cookie",
+        `BotInfo=${JSON.stringify(
+          res.cookies.botInfo
+        )};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+      )
+      .writeHeader(
+        "set-cookie",
+        `DeviceInfo=${JSON.stringify(
+          res.cookies.deviceInfo
+        )};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+      )
+      .writeHeader(
+        "set-cookie",
+        `LocaleInfo=${JSON.stringify(
+          res.cookies.localeInfo
+        )};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+      );
 
-		return res
-	} // _getResponseWithDefaultCookie
+    return res;
+  }; // _getResponseWithDefaultCookie
 
-	const _allRequestHandler = () => {
-		if (SERVER_LESS) {
-			_app
-				.get('/web-scraping', async function (res, req) {
-					if (req.getHeader('authorization') !== webScrapingService)
-						res
-							.writeStatus('200')
-							.end(
-								'Welcome to MTr Web Scraping Service, please provide authorization to use it.',
-								true
-							)
-					else {
-						const startGenerating = Number(req.getQuery('startGenerating'))
-						const isFirstRequest = !!req.getQuery('isFirstRequest')
-						const url = req.getQuery('url') || ''
+  const _allRequestHandler = () => {
+    if (SERVER_LESS) {
+      _app
+        .get("/web-scraping", async function (res, req) {
+          if (req.getHeader("authorization") !== webScrapingService)
+            res
+              .writeStatus("200")
+              .end(
+                "Welcome to MTr Web Scraping Service, please provide authorization to use it.",
+                true
+              );
+          else {
+            const startGenerating = Number(req.getQuery("startGenerating"));
+            const isFirstRequest = !!req.getQuery("isFirstRequest");
+            const url = req.getQuery("url") || "";
 
-						res.onAborted(() => {
-							Console.log('Request aborted')
-						})
+            res.onAborted(() => {
+              Console.log("Request aborted");
+            });
 
-						const result = await SSRHandler({
-							startGenerating,
-							isFirstRequest,
-							url,
-						})
+            const result = await SSRHandler({
+              startGenerating,
+              isFirstRequest,
+              url,
+            });
 
-						res.cork(() => {
-							res
-								.writeStatus('200')
-								.end(result ? JSON.stringify(result) : '{}', true)
-						})
-					}
-				})
-				.post('/cleaner-service', async function (res, req) {
-					if (req.getHeader('authorization') !== cleanerService)
-						res
-							.writeStatus('200')
-							.end(
-								'Welcome to MTr Cleaner Service, please provide authorization to use it.',
-								true
-							)
-					else if (!SERVER_LESS)
-						res
-							.writeStatus('200')
-							.end(
-								'MTr cleaner service can not run in none serverless environment'
-							)
-					else {
-						res.onAborted(() => {
-							Console.log('Request aborted')
-						})
+            res.cork(() => {
+              res
+                .writeStatus("200")
+                .end(result ? JSON.stringify(result) : "{}", true);
+            });
+          }
+        })
+        .post("/cleaner-service", async function (res, req) {
+          if (req.getHeader("authorization") !== cleanerService)
+            res
+              .writeStatus("200")
+              .end(
+                "Welcome to MTr Cleaner Service, please provide authorization to use it.",
+                true
+              );
+          else if (!SERVER_LESS)
+            res
+              .writeStatus("200")
+              .end(
+                "MTr cleaner service can not run in none serverless environment"
+              );
+          else {
+            res.onAborted(() => {
+              Console.log("Request aborted");
+            });
 
-						await CleanerService()
+            await CleanerService();
 
-						Console.log('Finish clean service!')
+            Console.log("Finish clean service!");
 
-						res.cork(() => {
-							res.writeStatus('200').end('Finish clean service!', true)
-						})
-					}
-				})
-		}
-		_app.get('/*', async function (res, req) {
-			// NOTE - Check and create base url
-			if (!PROCESS_ENV.BASE_URL)
-				PROCESS_ENV.BASE_URL = `${
-					req.getHeader('x-forwarded-proto')
-						? req.getHeader('x-forwarded-proto')
-						: 'http'
-				}://${req.getHeader('host')}`
+            res.cork(() => {
+              res.writeStatus("200").end("Finish clean service!", true);
+            });
+          }
+        });
+    }
+    _app.get("/*", async function (res, req) {
+      // NOTE - Check and create base url
+      if (!PROCESS_ENV.BASE_URL)
+        PROCESS_ENV.BASE_URL = `${
+          req.getHeader("x-forwarded-proto")
+            ? req.getHeader("x-forwarded-proto")
+            : "http"
+        }://${req.getHeader("host")}`;
 
-			DetectStaticMiddle(res, req)
+      DetectStaticMiddle(res, req);
 
-			// NOTE - Check if static will send static file
-			if (res.writableEnded) return
+      // NOTE - Check if static will send static file
+      if (res.writableEnded) return;
 
-			// NOTE - Detect, setup BotInfo and LocaleInfo
-			DetectBotMiddle(res, req)
-			DetectLocaleMiddle(res, req)
+      // NOTE - Detect, setup BotInfo and LocaleInfo
+      DetectBotMiddle(res, req);
+      DetectLocaleMiddle(res, req);
 
-			const botInfo: IBotInfo = res.cookies?.botInfo
+      const botInfo: IBotInfo = res.cookies?.botInfo;
 
-			if (
-				IS_REMOTE_CRAWLER &&
-				((ServerConfig.crawlerSecretKey &&
-					req.getQuery('crawlerSecretKey') !== ServerConfig.crawlerSecretKey) ||
-					(!botInfo.isBot && DISABLE_SSR_CACHE))
-			) {
-				return res.writeStatus('403').end('403 Forbidden', true)
-			}
+      if (
+        IS_REMOTE_CRAWLER &&
+        ((ServerConfig.crawlerSecretKey &&
+          req.getQuery("crawlerSecretKey") !== ServerConfig.crawlerSecretKey) ||
+          (!botInfo.isBot && DISABLE_SSR_CACHE))
+      ) {
+        return res.writeStatus("403").end("403 Forbidden", true);
+      }
 
-			// NOTE - Check redirect or not
-			const isRedirect = DetectRedirectMiddle(res, req)
+      // NOTE - Check redirect or not
+      const isRedirect = DetectRedirectMiddle(res, req);
 
-			/**
-			 * NOTE
-			 * - We need crawl page although this request is not a bot
-			 * When we request by enter first request, redirect will checked and will redirect immediately in server. But when we change router in client side, the request will be a extra fetch from client to server to check redirect information, in this case redirect will run in client not server and won't any request call to server after client run redirect. So we need crawl page in server in the first fetch request that client call to server (if header.accept is 'application/json' then it's fetch request from client)
-			 */
-			if (
-				(res.writableEnded && botInfo.isBot) ||
-				(isRedirect && req.getHeader('accept') !== 'application/json')
-			)
-				return
+      /**
+       * NOTE
+       * - We need crawl page although this request is not a bot
+       * When we request by enter first request, redirect will checked and will redirect immediately in server. But when we change router in client side, the request will be a extra fetch from client to server to check redirect information, in this case redirect will run in client not server and won't any request call to server after client run redirect. So we need crawl page in server in the first fetch request that client call to server (if header.accept is 'application/json' then it's fetch request from client)
+       */
+      if (
+        (res.writableEnded && botInfo.isBot) ||
+        (isRedirect && req.getHeader("accept") !== "application/json")
+      )
+        return;
 
-			// NOTE - Detect DeviceInfo
-			DetectDeviceMiddle(res, req)
+      // NOTE - Detect DeviceInfo
+      DetectDeviceMiddle(res, req);
 
-			const enableISR =
-				ServerConfig.isr.enable &&
-				Boolean(
-					!ServerConfig.isr.routes ||
-						!ServerConfig.isr.routes[req.getUrl()] ||
-						ServerConfig.isr.routes[req.getUrl()].enable ||
-						!ServerConfig.isr.routes[res.urlForCrawler] ||
-						ServerConfig.isr.routes[res.urlForCrawler].enable
-				)
+      // NOTE - Set cookies for EnvironmentInfo
+      res.cookies.environmentInfo = (() => {
+        const tmpEnvironmentInfo =
+          req.getHeader("environmentinfo") || req.getHeader("environmentInfo");
 
-			if (
-				ENV_MODE !== 'development' &&
-				enableISR &&
-				req.getHeader('service') !== 'puppeteer'
-			) {
-				const url = convertUrlHeaderToQueryString(
-					getUrl(res, req),
-					res,
-					!botInfo.isBot
-				)
+        if (tmpEnvironmentInfo) return JSON.parse(tmpEnvironmentInfo);
 
-				if (botInfo.isBot) {
-					res.onAborted(() => {
-						Console.log('Request aborted')
-					})
+        return {
+          ENV,
+          MODE,
+          ENV_MODE,
+        };
+      })();
 
-					try {
-						const result = await ISRGenerator({
-							url,
-						})
+      const enableISR =
+        ServerConfig.isr.enable &&
+        Boolean(
+          !ServerConfig.isr.routes ||
+            !ServerConfig.isr.routes[req.getUrl()] ||
+            ServerConfig.isr.routes[req.getUrl()].enable ||
+            !ServerConfig.isr.routes[res.urlForCrawler] ||
+            ServerConfig.isr.routes[res.urlForCrawler].enable
+        );
 
-						res.cork(() => {
-							if (result) {
-								/**
-								 * NOTE
-								 * calc by using:
-								 * https://www.inchcalculator.com/convert/year-to-second/
-								 */
-								res.writeStatus(String(result.status))
+      if (
+        ENV_MODE !== "development" &&
+        enableISR &&
+        req.getHeader("service") !== "puppeteer"
+      ) {
+        const url = convertUrlHeaderToQueryString(
+          getUrl(res, req),
+          res,
+          !botInfo.isBot
+        );
 
-								if (result.status === 503) res.writeHeader('Retry-After', '120')
+        if (botInfo.isBot) {
+          res.onAborted(() => {
+            Console.log("Request aborted");
+          });
 
-								// Add Server-Timing! See https://w3c.github.io/server-timing/.
-								if (
-									(CACHEABLE_STATUS_CODE[result.status] ||
-										result.status === 503) &&
-									result.response
-								) {
-									try {
-										res = _getResponseWithDefaultCookie(res)
-										const body = result.html
-											? result.html
-											: fs.readFileSync(result.response)
-										res.end(body, true)
-									} catch {
-										res.writeStatus('404').end('Page not found!', true)
-									}
-								} else if (result.html) {
-									if (result.status === 200) {
-										res
-											.writeHeader(
-												'Server-Timing',
-												`Prerender;dur=50;desc="Headless render time (ms)"`
-											)
-											.writeHeader('Cache-Control', 'no-store')
-									}
+          try {
+            const result = await ISRGenerator({
+              url,
+            });
 
-									res.end(result.html || '', true)
-								} else {
-									res.end(`${result.status} Error`, true)
-								}
-							} else {
-								res.writeStatus('504').end('504 Gateway Timeout', true)
-							}
-						})
-					} catch (err) {
-						Console.error('url', url)
-						Console.error(err)
-						// NOTE - Error: uWS.HttpResponse must not be accessed after uWS.HttpResponse.onAborted callback, or after a successful response. See documentation for uWS.HttpResponse and consult the user manual.
-						res.writeStatus('500').end('Server Error!', true)
-					}
+            res.cork(() => {
+              if (result) {
+                /**
+                 * NOTE
+                 * calc by using:
+                 * https://www.inchcalculator.com/convert/year-to-second/
+                 */
+                res.writeStatus(String(result.status));
 
-					res.writableEnded = true
-				} else if (
-					!botInfo.isBot &&
-					(!DISABLE_SSR_CACHE || ServerConfig.crawler)
-				) {
-					try {
-						if (SERVER_LESS) {
-							await ISRGenerator({
-								url,
-								isSkipWaiting: true,
-							})
-						} else {
-							ISRGenerator({
-								url,
-								isSkipWaiting: true,
-							})
-						}
-					} catch (err) {
-						Console.error('url', url)
-						Console.error(err)
-					}
-				}
-			}
+                if (result.status === 503)
+                  res.writeHeader("Retry-After", "120");
 
-			if (!res.writableEnded) {
-				/**
-				 * NOTE
-				 * Cache-Control max-age is 1 year
-				 * calc by using:
-				 * https://www.inchcalculator.com/convert/year-to-second/
-				 */
-				if (req.getHeader('accept') === 'application/json') {
-					res.writeStatus('200')
+                // Add Server-Timing! See https://w3c.github.io/server-timing/.
+                if (
+                  (CACHEABLE_STATUS_CODE[result.status] ||
+                    result.status === 503) &&
+                  result.response
+                ) {
+                  try {
+                    res = _getResponseWithDefaultCookie(res);
+                    const body = result.html
+                      ? result.html
+                      : fs.readFileSync(result.response);
+                    res.end(body, true);
+                  } catch {
+                    res.writeStatus("404").end("Page not found!", true);
+                  }
+                } else if (result.html) {
+                  if (result.status === 200) {
+                    res
+                      .writeHeader(
+                        "Server-Timing",
+                        `Prerender;dur=50;desc="Headless render time (ms)"`
+                      )
+                      .writeHeader("Cache-Control", "no-store");
+                  }
 
-					res = _getResponseWithDefaultCookie(res)
-					res.end(
-						JSON.stringify({
-							status: 200,
-							originPath: req.getUrl(),
-							path: req.getUrl(),
-						}),
-						true
-					)
-				} else {
-					const filePath =
-						(req.getHeader('static-html-path') as string) ||
-						path.resolve(__dirname, '../../../dist/index.html')
+                  res.end(result.html || "", true);
+                } else {
+                  res.end(`${result.status} Error`, true);
+                }
+              } else {
+                res.writeStatus("504").end("504 Gateway Timeout", true);
+              }
+            });
+          } catch (err) {
+            Console.error("url", url);
+            Console.error(err);
+            // NOTE - Error: uWS.HttpResponse must not be accessed after uWS.HttpResponse.onAborted callback, or after a successful response. See documentation for uWS.HttpResponse and consult the user manual.
+            res.writeStatus("500").end("Server Error!", true);
+          }
 
-					try {
-						const body = fs.readFileSync(filePath)
-						res
-							.writeStatus('200')
-							.writeHeader(
-								'Content-Type',
-								req.getHeader('accept') === 'application/json'
-									? 'application/json'
-									: 'text/html; charset=utf-8'
-							)
-						res = _getResponseWithDefaultCookie(res)
-						res
-							.writeHeader('Cache-Control', 'no-store')
-							.writeHeader('etag', 'false')
-							.writeHeader('lastModified', 'false')
+          res.writableEnded = true;
+        } else if (
+          !botInfo.isBot &&
+          (!DISABLE_SSR_CACHE || ServerConfig.crawler)
+        ) {
+          try {
+            if (SERVER_LESS) {
+              await ISRGenerator({
+                url,
+                isSkipWaiting: true,
+              });
+            } else {
+              ISRGenerator({
+                url,
+                isSkipWaiting: true,
+              });
+            }
+          } catch (err) {
+            Console.error("url", url);
+            Console.error(err);
+          }
+        }
+      }
 
-						// NOTE - Setup cookie information
-						if (res.cookies.lang)
-							res.writeHeader('set-cookie', `lang=${res.cookies.lang};Path=/`)
-						if (res.cookies.country)
-							res.writeHeader(
-								'set-cookie',
-								`country=${res.cookies.country};Path=/`
-							)
+      if (!res.writableEnded) {
+        /**
+         * NOTE
+         * Cache-Control max-age is 1 year
+         * calc by using:
+         * https://www.inchcalculator.com/convert/year-to-second/
+         */
+        if (req.getHeader("accept") === "application/json") {
+          res.writeStatus("200");
 
-						res.end(body, true)
-					} catch {
-						res
-							.writeStatus('404')
-							.writeHeader(
-								'Content-Type',
-								req.getHeader('accept') === 'application/json'
-									? 'application/json'
-									: 'text/html; charset=utf-8'
-							)
-							.end('File not found!', true)
-					}
-				}
-			}
-		})
-	}
+          res = _getResponseWithDefaultCookie(res);
+          res.end(
+            JSON.stringify({
+              status: 200,
+              originPath: req.getUrl(),
+              path: req.getUrl(),
+            }),
+            true
+          );
+        } else {
+          const filePath =
+            (req.getHeader("static-html-path") as string) ||
+            path.resolve(__dirname, "../../../dist/index.html");
 
-	return {
-		init(app: TemplatedApp) {
-			if (!app) return Console.warn('You need provide express app!')
-			_app = app
-			_allRequestHandler()
-		},
-	}
-})()
+          try {
+            const body = fs.readFileSync(filePath);
+            res
+              .writeStatus("200")
+              .writeHeader(
+                "Content-Type",
+                req.getHeader("accept") === "application/json"
+                  ? "application/json"
+                  : "text/html; charset=utf-8"
+              );
+            res = _getResponseWithDefaultCookie(res);
+            res
+              .writeHeader("Cache-Control", "no-store")
+              .writeHeader("etag", "false")
+              .writeHeader("lastModified", "false");
 
-export default puppeteerSSRService
+            // NOTE - Setup cookie information
+            if (res.cookies.lang)
+              res.writeHeader("set-cookie", `lang=${res.cookies.lang};Path=/`);
+            if (res.cookies.country)
+              res.writeHeader(
+                "set-cookie",
+                `country=${res.cookies.country};Path=/`
+              );
+
+            res.end(body, true);
+          } catch {
+            res
+              .writeStatus("404")
+              .writeHeader(
+                "Content-Type",
+                req.getHeader("accept") === "application/json"
+                  ? "application/json"
+                  : "text/html; charset=utf-8"
+              )
+              .end("File not found!", true);
+          }
+        }
+      }
+    });
+  };
+
+  return {
+    init(app: TemplatedApp) {
+      if (!app) return Console.warn("You need provide express app!");
+      _app = app;
+      _allRequestHandler();
+    },
+  };
+})();
+
+export default puppeteerSSRService;

@@ -9,7 +9,6 @@ import {
   userDataPath,
 } from "../../constants";
 import ServerConfig from "../../server.config";
-import { getStore } from "../../store";
 import Console from "../../utils/ConsoleHandler";
 import { ENV_MODE } from "../../utils/InitEnv";
 import {
@@ -169,8 +168,6 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
   let html = "";
   let status = 200;
   const specialInfo = regexQueryStringSpecialInfo.exec(url)?.groups ?? {};
-  console.log(url);
-  console.log("specialInfo", specialInfo);
 
   if (ServerConfig.crawler) {
     const requestParams = {
