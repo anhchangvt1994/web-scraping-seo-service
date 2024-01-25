@@ -1,90 +1,88 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true});
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
 
+var _redirectconfig = require('../app/redirect.config')
+var _InitEnv = require('./InitEnv')
 
+const DetectRedirect = (req, res) => {
+	const urlInfo = new URL(
+		`${_InitEnv.PROCESS_ENV.BASE_URL}${req.getUrl()}?${
+			req.getQuery() ? req.getQuery() : ''
+		}`
+	)
 
+	const redirectResult = {
+		originPath: urlInfo.pathname,
+		path: urlInfo.pathname,
+		search: urlInfo.search
+			.replace(/key=([^&]*)/, '')
+			.replace(/&{2,}/, '&')
+			.replace(/(\?|\?\&{0,})$/, ''),
+		status: 200,
+	}
 
+	if (
+		['puppeteer', 'web-scraping-service', 'cleaner-service'].includes(
+			req.getHeader('service')
+		)
+	)
+		return redirectResult
 
-var _redirectconfig = require('../app/redirect.config');
-var _InitEnv = require('./InitEnv');
+	const REDIRECT_INFO_FORMATTED = (() => {
+		if (!_redirectconfig.REDIRECT_INFO || !_redirectconfig.REDIRECT_INFO.length)
+			return []
 
-const DetectRedirect
+		const tmpRedirectInfoFormatted = []
 
+		for (const redirectInfoItem of _redirectconfig.REDIRECT_INFO) {
+			tmpRedirectInfoFormatted.push({
+				...redirectInfoItem,
+				pathRegex: new RegExp(`${redirectInfoItem.path}(/|$)`),
+			})
+		}
 
- = (req, res) => {
-  const urlInfo = new URL(
-    `${_InitEnv.PROCESS_ENV.BASE_URL}${req.getUrl()}?${
-      req.getQuery() ? req.getQuery() : ""
-    }`
-  );
+		return tmpRedirectInfoFormatted
+	})()
 
-  const redirectResult = {
-    originPath: urlInfo.pathname,
-    path: urlInfo.pathname,
-    search: urlInfo.search
-      .replace(/key=([^&]*)/, "")
-      .replace(/&{2,}/, "&")
-      .replace(/(\?|\?\&{0,})$/, ""),
-    status: 200,
-  };
+	for (const redirectInfoItem of REDIRECT_INFO_FORMATTED) {
+		if (redirectInfoItem.pathRegex.test(urlInfo.pathname)) {
+			redirectResult.status = redirectInfoItem.statusCode
+			redirectResult.path = redirectInfoItem.targetPath
+			break
+		}
+	}
 
-  if (
-    ["puppeteer", "web-scraping-service", "cleaner-service"].includes(
-      req.getHeader("service")
-    )
-  )
-    return redirectResult;
+	redirectResult.path = (() => {
+		const query = urlInfo.searchParams
 
-  const REDIRECT_INFO_FORMATTED = (() => {
-    if (!_redirectconfig.REDIRECT_INFO || !_redirectconfig.REDIRECT_INFO.length) return [];
+		if (query.get('urlTesting')) return redirectResult.path
 
-    const tmpRedirectInfoFormatted
+		const redirectPath = /\/$/.test(redirectResult.path)
+			? redirectResult.path.slice(0, -1)
+			: redirectResult.path
 
- = [];
+		return redirectPath
+	})()
 
-    for (const redirectInfoItem of _redirectconfig.REDIRECT_INFO) {
-      tmpRedirectInfoFormatted.push({
-        ...redirectInfoItem,
-        pathRegex: new RegExp(`${redirectInfoItem.path}(/|$)`),
-      });
-    }
+	if (redirectResult.path && redirectResult.path !== redirectResult.originPath)
+		redirectResult.status = 301
 
-    return tmpRedirectInfoFormatted;
-  })();
+	const redirectInjectionResult = _redirectconfig.REDIRECT_INJECTION.call(
+		void 0,
+		redirectResult,
+		req,
+		res
+	)
 
-  for (const redirectInfoItem of REDIRECT_INFO_FORMATTED) {
-    if (redirectInfoItem.pathRegex.test(urlInfo.pathname)) {
-      redirectResult.status = redirectInfoItem.statusCode;
-      redirectResult.path = redirectInfoItem.targetPath;
-      break;
-    }
-  }
+	if (redirectInjectionResult.status !== 200) {
+		redirectResult.status =
+			redirectResult.status === 301
+				? redirectResult.status
+				: redirectInjectionResult.status
+		redirectResult.path = redirectInjectionResult.path
+	}
 
-  redirectResult.path = (() => {
-    const query = urlInfo.searchParams;
+	return redirectResult
+}
 
-    if (query.get("urlTesting")) return redirectResult.path;
-
-    const redirectPath = /\/$/.test(redirectResult.path)
-      ? redirectResult.path.slice(0, -1)
-      : redirectResult.path;
-
-    return redirectPath;
-  })();
-
-  if (redirectResult.path && redirectResult.path !== redirectResult.originPath)
-    redirectResult.status = 301;
-
-  const redirectInjectionResult = _redirectconfig.REDIRECT_INJECTION.call(void 0, redirectResult, req, res);
-
-  if (redirectInjectionResult.status !== 200) {
-    redirectResult.status =
-      redirectResult.status === 301
-        ? redirectResult.status
-        : redirectInjectionResult.status;
-    redirectResult.path = redirectInjectionResult.path;
-  }
-
-  return redirectResult;
-};
-
-exports. default = DetectRedirect;
+exports.default = DetectRedirect

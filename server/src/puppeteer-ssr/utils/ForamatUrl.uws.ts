@@ -1,42 +1,46 @@
-import { HttpRequest, HttpResponse } from "uWebSockets.js";
-import { IBotInfo } from "../../types";
-import { PROCESS_ENV } from "../../utils/InitEnv";
+import { HttpRequest, HttpResponse } from 'uWebSockets.js'
+import { IBotInfo } from '../../types'
+import { PROCESS_ENV } from '../../utils/InitEnv'
 
 export const convertUrlHeaderToQueryString = (
-  url: string,
-  res: HttpResponse,
-  simulateBot: boolean = false
+	url: string,
+	res: HttpResponse,
+	simulateBot: boolean = false
 ) => {
-  if (!url) return "";
+	if (!url) return ''
 
-  let botInfoStringify;
+	let botInfoStringify
 
-  if (simulateBot) {
-    botInfoStringify = JSON.stringify({
-      isBot: true,
-      name: "puppeteer-ssr",
-    } as IBotInfo);
-  } else {
-    botInfoStringify = JSON.stringify(res.cookies?.botInfo);
-  }
+	if (simulateBot) {
+		botInfoStringify = JSON.stringify({
+			isBot: true,
+			name: 'puppeteer-ssr',
+		} as IBotInfo)
+	} else {
+		botInfoStringify = JSON.stringify(res.cookies?.botInfo)
+	}
 
-  const deviceInfoStringify = JSON.stringify(res.cookies?.deviceInfo);
+	const deviceInfoStringify = JSON.stringify(res.cookies?.deviceInfo)
+	const localInfoStrinfity = JSON.stringify(res.cookies?.['LocaleInfo'])
+	const environmentInfo = JSON.stringify(res.cookies?.['EnvironmentInfo'])
 
-  const urlFormatted = `${url}${
-    url.indexOf("?") === -1 ? "?" : "&"
-  }botInfo=${botInfoStringify}&deviceInfo=${deviceInfoStringify}`.trim();
+	let urlFormatted = `${url}${url.indexOf('?') === -1 ? '?' : '&'}
+    botInfo=${botInfoStringify}
+    &deviceInfo=${deviceInfoStringify}
+    &localInfoStrinfity=${localInfoStrinfity}
+    &environmentInfo=${environmentInfo}`.trim()
 
-  return urlFormatted;
-}; // formatUrl
+	return urlFormatted
+} // formatUrl
 
 export const getUrl = (res: HttpResponse, req: HttpRequest) => {
-  if (!res) return "";
+	if (!res) return ''
 
-  const pathname = res.urlForCrawler;
+	const pathname = res.urlForCrawler
 
-  return (
-    req.getQuery("urlTesting") ||
-    req.getQuery("url") ||
-    PROCESS_ENV.BASE_URL + pathname
-  ).trim();
-}; // getUrl
+	return (
+		req.getQuery('urlTesting') ||
+		req.getQuery('url') ||
+		PROCESS_ENV.BASE_URL + pathname
+	).trim()
+} // getUrl

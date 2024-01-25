@@ -1,26 +1,53 @@
-"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
-var _path = require('path'); var _path2 = _interopRequireDefault(_path);
-var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
-var _constants = require('../../../constants');
-var _ConsoleHandler = require('../../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+'use strict'
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+function _nullishCoalesce(lhs, rhsFn) {
+	if (lhs != null) {
+		return lhs
+	} else {
+		return rhsFn()
+	}
+}
+function _optionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
+var _fs = require('fs')
+var _fs2 = _interopRequireDefault(_fs)
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
+var _workerpool = require('workerpool')
+var _workerpool2 = _interopRequireDefault(_workerpool)
+var _constants = require('../../../constants')
+var _ConsoleHandler = require('../../../utils/ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
+var _utils = require('./utils')
 
+const maintainFile = _path2.default.resolve(
+	__dirname,
+	'../../../../maintain.html'
+)
 
-
-
-
-var _utils = require('./utils');
-
-const maintainFile = _path2.default.resolve(__dirname, '../../../../maintain.html')
-
-
-
-
-
-const get = async (
-	url,
-	options
-) => {
+const get = async (url, options) => {
 	options = options || {
 		autoCreateIfEmpty: true,
 	}
@@ -71,7 +98,7 @@ const get = async (
 					ttRenderMs: 200,
 					available: false,
 					isInit: true,
-				} 
+				}
 			}
 		}
 	}
@@ -85,9 +112,18 @@ const get = async (
 			file,
 			response: maintainFile,
 			status: 503,
-			createdAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _ => _.createdAt]), () => ( new Date())),
-			updatedAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _2 => _2.updatedAt]), () => ( new Date())),
-			requestedAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _3 => _3.requestedAt]), () => ( new Date())),
+			createdAt: _nullishCoalesce(
+				_optionalChain([info, 'optionalAccess', (_) => _.createdAt]),
+				() => new Date()
+			),
+			updatedAt: _nullishCoalesce(
+				_optionalChain([info, 'optionalAccess', (_2) => _2.updatedAt]),
+				() => new Date()
+			),
+			requestedAt: _nullishCoalesce(
+				_optionalChain([info, 'optionalAccess', (_3) => _3.requestedAt]),
+				() => new Date()
+			),
 			ttRenderMs: 200,
 			available: false,
 			isInit: false,
@@ -111,11 +147,7 @@ const get = async (
 	}
 } // get
 
-const set = async ({
-	html,
-	url,
-	isRaw = false,
-}) => {
+const set = async ({ html, url, isRaw = false }) => {
 	if (!html) {
 		_ConsoleHandler2.default.error('Need provide "html" param')
 		return
@@ -124,7 +156,10 @@ const set = async ({
 	const key = _utils.getKey.call(void 0, url)
 	const file = `${_constants.pagesPath}/${key}${isRaw ? '.raw' : ''}.html`
 
-	if (!isRaw && _fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.html`)) {
+	if (
+		!isRaw &&
+		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.html`)
+	) {
 		try {
 			_fs2.default.renameSync(`${_constants.pagesPath}/${key}.raw.html`, file)
 		} catch (err) {
@@ -143,10 +178,9 @@ const set = async ({
 		}
 	}
 
-	const result =
-		(await get(url, {
-			autoCreateIfEmpty: false,
-		})) || ({ html, status: 200 } )
+	const result = (await get(url, {
+		autoCreateIfEmpty: false,
+	})) || { html, status: 200 }
 
 	return result
 } // set
@@ -155,7 +189,8 @@ const remove = (url) => {
 	if (!url) return _ConsoleHandler2.default.log('Url can not empty!')
 	const key = _utils.getKey.call(void 0, url)
 	let file = `${_constants.pagesPath}/${key}.raw.html`
-	if (!_fs2.default.existsSync(file)) file = `${_constants.pagesPath}/${key}.html`
+	if (!_fs2.default.existsSync(file))
+		file = `${_constants.pagesPath}/${key}.html`
 	if (!_fs2.default.existsSync(file))
 		return _ConsoleHandler2.default.log('Does not exist file reference url!')
 

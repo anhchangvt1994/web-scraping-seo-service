@@ -1,4 +1,6 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); const urlList = [
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+const urlList = [
 	'https://fado.vn',
 	'https://lazada.vn',
 	'https://tiki.vn',
@@ -53,4 +55,5 @@
 	'https://owen.vn',
 	'https://4men.com.vn',
 	'https://biluxury.vn',
-]; exports.urlList = urlList
+]
+exports.urlList = urlList
