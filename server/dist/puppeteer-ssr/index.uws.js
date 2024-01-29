@@ -1,66 +1,24 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-function _optionalChain(ops) {
-	let lastAccessLHS = undefined
-	let value = ops[0]
-	let i = 1
-	while (i < ops.length) {
-		const op = ops[i]
-		const fn = ops[i + 1]
-		i += 2
-		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
-			return undefined
-		}
-		if (op === 'access' || op === 'optionalAccess') {
-			lastAccessLHS = value
-			value = fn(value)
-		} else if (op === 'call' || op === 'optionalCall') {
-			value = fn((...args) => value.call(lastAccessLHS, ...args))
-			lastAccessLHS = undefined
-		}
-	}
-	return value
-}
-var _fs = require('fs')
-var _fs2 = _interopRequireDefault(_fs)
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+var _path = require('path'); var _path2 = _interopRequireDefault(_path);
 
-var _constants = require('../constants')
-var _DetectBot = require('../middlewares/uws/DetectBot')
-var _DetectBot2 = _interopRequireDefault(_DetectBot)
-var _DetectDevice = require('../middlewares/uws/DetectDevice')
-var _DetectDevice2 = _interopRequireDefault(_DetectDevice)
-var _DetectLocale = require('../middlewares/uws/DetectLocale')
-var _DetectLocale2 = _interopRequireDefault(_DetectLocale)
-var _DetectRedirect = require('../middlewares/uws/DetectRedirect')
-var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect)
-var _DetectStatic = require('../middlewares/uws/DetectStatic')
-var _DetectStatic2 = _interopRequireDefault(_DetectStatic)
-var _serverconfig = require('../server.config')
-var _serverconfig2 = _interopRequireDefault(_serverconfig)
+var _zlib = require('zlib');
+var _constants = require('../constants');
+var _DetectBot = require('../middlewares/uws/DetectBot'); var _DetectBot2 = _interopRequireDefault(_DetectBot);
+var _DetectDevice = require('../middlewares/uws/DetectDevice'); var _DetectDevice2 = _interopRequireDefault(_DetectDevice);
+var _DetectLocale = require('../middlewares/uws/DetectLocale'); var _DetectLocale2 = _interopRequireDefault(_DetectLocale);
+var _DetectRedirect = require('../middlewares/uws/DetectRedirect'); var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect);
+var _DetectStatic = require('../middlewares/uws/DetectStatic'); var _DetectStatic2 = _interopRequireDefault(_DetectStatic);
+var _serverconfig = require('../server.config'); var _serverconfig2 = _interopRequireDefault(_serverconfig);
 
-var _CleanerService = require('../utils/CleanerService')
-var _CleanerService2 = _interopRequireDefault(_CleanerService)
-var _ConsoleHandler = require('../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _InitEnv = require('../utils/InitEnv')
-var _constants3 = require('./constants')
-var _ForamatUrluws = require('./utils/ForamatUrl.uws')
-var _ISRGeneratornext = require('./utils/ISRGenerator.next')
-var _ISRGeneratornext2 = _interopRequireDefault(_ISRGeneratornext)
-var _ISRHandler = require('./utils/ISRHandler')
-var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
+var _CleanerService = require('../utils/CleanerService'); var _CleanerService2 = _interopRequireDefault(_CleanerService);
+var _ConsoleHandler = require('../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _InitEnv = require('../utils/InitEnv');
+var _constants3 = require('./constants');
+var _ForamatUrluws = require('./utils/ForamatUrl.uws');
+var _ISRGeneratornext = require('./utils/ISRGenerator.next'); var _ISRGeneratornext2 = _interopRequireDefault(_ISRGeneratornext);
+var _ISRHandler = require('./utils/ISRHandler'); var _ISRHandler2 = _interopRequireDefault(_ISRHandler);
 
 const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
-const ENVIRONMENT = JSON.stringify({
-	ENV: _InitEnv.ENV,
-	MODE: _InitEnv.MODE,
-	ENV_MODE: _InitEnv.ENV_MODE,
-})
 
 const puppeteerSSRService = (async () => {
 	let _app
@@ -71,7 +29,9 @@ const puppeteerSSRService = (async () => {
 		res
 			.writeHeader(
 				'set-cookie',
-				`EnvironmentInfo=${ENVIRONMENT};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+				`EnvironmentInfo=${JSON.stringify(
+					res.cookies.environmentInfo
+				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
 			.writeHeader(
 				'set-cookie',
@@ -147,7 +107,7 @@ const puppeteerSSRService = (async () => {
 							_ConsoleHandler2.default.log('Request aborted')
 						})
 
-						await _CleanerService2.default.call(void 0)
+						await _CleanerService2.default.call(void 0, )
 
 						_ConsoleHandler2.default.log('Finish clean service!')
 
@@ -158,6 +118,11 @@ const puppeteerSSRService = (async () => {
 				})
 		}
 		_app.get('/*', async function (res, req) {
+			_DetectStatic2.default.call(void 0, res, req)
+
+			// NOTE - Check if static will send static file
+			if (res.writableEnded) return
+
 			// NOTE - Check and create base url
 			if (!_InitEnv.PROCESS_ENV.BASE_URL)
 				_InitEnv.PROCESS_ENV.BASE_URL = `${
@@ -166,28 +131,16 @@ const puppeteerSSRService = (async () => {
 						: 'http'
 				}://${req.getHeader('host')}`
 
-			_DetectStatic2.default.call(void 0, res, req)
-
-			// NOTE - Check if static will send static file
-			if (res.writableEnded) return
-
 			// NOTE - Detect, setup BotInfo and LocaleInfo
 			_DetectBot2.default.call(void 0, res, req)
 			_DetectLocale2.default.call(void 0, res, req)
 
-			const botInfo = _optionalChain([
-				res,
-				'access',
-				(_) => _.cookies,
-				'optionalAccess',
-				(_2) => _2.botInfo,
-			])
+			const botInfo = _optionalChain([res, 'access', _ => _.cookies, 'optionalAccess', _2 => _2.botInfo])
 
 			if (
 				_constants.IS_REMOTE_CRAWLER &&
 				((_serverconfig2.default.crawlerSecretKey &&
-					req.getQuery('crawlerSecretKey') !==
-						_serverconfig2.default.crawlerSecretKey) ||
+					req.getQuery('crawlerSecretKey') !== _serverconfig2.default.crawlerSecretKey) ||
 					(!botInfo.isBot && _constants3.DISABLE_SSR_CACHE))
 			) {
 				return res.writeStatus('403').end('403 Forbidden', true)
@@ -210,6 +163,20 @@ const puppeteerSSRService = (async () => {
 			// NOTE - Detect DeviceInfo
 			_DetectDevice2.default.call(void 0, res, req)
 
+			// NOTE - Set cookies for EnvironmentInfo
+			res.cookies.environmentInfo = (() => {
+				const tmpEnvironmentInfo =
+					req.getHeader('environmentinfo') || req.getHeader('environmentInfo')
+
+				if (tmpEnvironmentInfo) return JSON.parse(tmpEnvironmentInfo)
+
+				return {
+					ENV: _InitEnv.ENV,
+					MODE: _InitEnv.MODE,
+					ENV_MODE: _InitEnv.ENV_MODE,
+				}
+			})()
+
 			const enableISR =
 				_serverconfig2.default.isr.enable &&
 				Boolean(
@@ -220,13 +187,20 @@ const puppeteerSSRService = (async () => {
 						_serverconfig2.default.isr.routes[res.urlForCrawler].enable
 				)
 
+			const enableContentEncoding = Boolean(req.getHeader('accept-encoding'))
+			const contentEncoding = (() => {
+				const tmpHeaderAcceptEncoding = req.getHeader('accept-encoding') || ''
+				if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+				else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1) return 'gzip'
+				return '' 
+			})()
+
 			if (
 				_InitEnv.ENV_MODE !== 'development' &&
 				enableISR &&
 				req.getHeader('service') !== 'puppeteer'
 			) {
-				const url = _ForamatUrluws.convertUrlHeaderToQueryString.call(
-					void 0,
+				const url = _ForamatUrluws.convertUrlHeaderToQueryString.call(void 0, 
 					_ForamatUrluws.getUrl.call(void 0, res, req),
 					res,
 					!botInfo.isBot
@@ -251,6 +225,10 @@ const puppeteerSSRService = (async () => {
 								 */
 								res.writeStatus(String(result.status))
 
+								if (enableContentEncoding && result.status === 200) {
+									res.writeHeader('Content-Encoding', contentEncoding)
+								}
+
 								if (result.status === 503) res.writeHeader('Retry-After', '120')
 
 								// Add Server-Timing! See https://w3c.github.io/server-timing/.
@@ -261,9 +239,28 @@ const puppeteerSSRService = (async () => {
 								) {
 									try {
 										res = _getResponseWithDefaultCookie(res)
-										const body = result.html
-											? result.html
-											: _fs2.default.readFileSync(result.response)
+										const body = (() => {
+											let tmpBody = ''
+
+											if (enableContentEncoding) {
+												tmpBody = result.html
+													? contentEncoding === 'br'
+														? _zlib.brotliCompressSync.call(void 0, result.html)
+														: contentEncoding === 'gzip'
+														? _zlib.gzipSync.call(void 0, result.html)
+														: result.html
+													: _fs2.default.readFileSync(result.response)
+											} else if (result.response.indexOf('.br') !== -1) {
+												const content = _fs2.default.readFileSync(result.response)
+
+												tmpBody = _zlib.brotliDecompressSync.call(void 0, content).toString()
+											} else {
+												tmpBody = _fs2.default.readFileSync(result.response)
+											}
+
+											return tmpBody
+										})()
+
 										res.end(body, true)
 									} catch (e) {
 										res.writeStatus('404').end('Page not found!', true)
@@ -278,7 +275,11 @@ const puppeteerSSRService = (async () => {
 											.writeHeader('Cache-Control', 'no-store')
 									}
 
-									res.end(result.html || '', true)
+									const body = enableContentEncoding
+										? _zlib.brotliCompressSync.call(void 0, result.html)
+										: result.html
+
+									res.end(body || '', true)
 								} else {
 									res.end(`${result.status} Error`, true)
 								}
@@ -338,7 +339,7 @@ const puppeteerSSRService = (async () => {
 					)
 				} else {
 					const filePath =
-						req.getHeader('static-html-path') ||
+						(req.getHeader('static-html-path') ) ||
 						_path2.default.resolve(__dirname, '../../../dist/index.html')
 
 					try {
@@ -385,12 +386,11 @@ const puppeteerSSRService = (async () => {
 
 	return {
 		init(app) {
-			if (!app)
-				return _ConsoleHandler2.default.warn('You need provide express app!')
+			if (!app) return _ConsoleHandler2.default.warn('You need provide express app!')
 			_app = app
 			_allRequestHandler()
 		},
 	}
 })()
 
-exports.default = puppeteerSSRService
+exports. default = puppeteerSSRService

@@ -1,21 +1,17 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-var _fs = require('fs')
-var _fs2 = _interopRequireDefault(_fs)
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
-var _workerpool = require('workerpool')
-var _workerpool2 = _interopRequireDefault(_workerpool)
-var _constants = require('../../constants')
-var _ConsoleHandler = require('../../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _InitEnv = require('../../utils/InitEnv')
-var _constants3 = require('../constants')
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+var _path = require('path'); var _path2 = _interopRequireDefault(_path);
+var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
+var _constants = require('../../constants');
+var _ConsoleHandler = require('../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _InitEnv = require('../../utils/InitEnv');
+var _constants3 = require('../constants');
 
-var _utils = require('./Cache.worker/utils')
+
+
+
+
+
+var _utils = require('./Cache.worker/utils');
 
 const MAX_WORKERS = _InitEnv.PROCESS_ENV.MAX_WORKERS
 	? Number(_InitEnv.PROCESS_ENV.MAX_WORKERS)
@@ -38,10 +34,7 @@ const CacheManager = () => {
 			}
 
 		const pool = _workerpool2.default.pool(
-			_path2.default.resolve(
-				__dirname,
-				`./Cache.worker/index.${_constants.resourceExtension}`
-			),
+			_path2.default.resolve(__dirname, `./Cache.worker/index.${_constants.resourceExtension}`),
 			{
 				minWorkers: 1,
 				maxWorkers: MAX_WORKERS,
@@ -67,11 +60,11 @@ const CacheManager = () => {
 		}
 
 		const key = _utils.getKey.call(void 0, url)
-		let file = `${_constants.pagesPath}/${key}.html`
+		let file = `${_constants.pagesPath}/${key}.br`
 		let isRaw = false
 
 		if (!_fs2.default.existsSync(file)) {
-			file = `${_constants.pagesPath}/${key}.raw.html`
+			file = `${_constants.pagesPath}/${key}.raw.br`
 			isRaw = true
 		}
 
@@ -106,10 +99,7 @@ const CacheManager = () => {
 			}
 
 		const pool = _workerpool2.default.pool(
-			_path2.default.resolve(
-				__dirname,
-				`./Cache.worker/index.${_constants.resourceExtension}`
-			),
+			_path2.default.resolve(__dirname, `./Cache.worker/index.${_constants.resourceExtension}`),
 			{
 				minWorkers: 1,
 				maxWorkers: MAX_WORKERS,
@@ -130,10 +120,7 @@ const CacheManager = () => {
 	const remove = async (url) => {
 		if (_constants3.DISABLE_SSR_CACHE) return
 		const pool = _workerpool2.default.pool(
-			_path2.default.resolve(
-				__dirname,
-				`./Cache.worker/index.${_constants.resourceExtension}`
-			),
+			_path2.default.resolve(__dirname, `./Cache.worker/index.${_constants.resourceExtension}`),
 			{
 				minWorkers: 1,
 				maxWorkers: MAX_WORKERS,
@@ -158,4 +145,4 @@ const CacheManager = () => {
 	}
 }
 
-exports.default = CacheManager
+exports. default = CacheManager

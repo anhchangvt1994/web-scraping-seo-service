@@ -1,74 +1,23 @@
-'use strict'
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-function _nullishCoalesce(lhs, rhsFn) {
-	if (lhs != null) {
-		return lhs
-	} else {
-		return rhsFn()
-	}
-}
-function _optionalChain(ops) {
-	let lastAccessLHS = undefined
-	let value = ops[0]
-	let i = 1
-	while (i < ops.length) {
-		const op = ops[i]
-		const fn = ops[i + 1]
-		i += 2
-		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
-			return undefined
-		}
-		if (op === 'access' || op === 'optionalAccess') {
-			lastAccessLHS = value
-			value = fn(value)
-		} else if (op === 'call' || op === 'optionalCall') {
-			value = fn((...args) => value.call(lastAccessLHS, ...args))
-			lastAccessLHS = undefined
-		}
-	}
-	return value
-}
-var _child_process = require('child_process')
-var _cors = require('cors')
-var _cors2 = _interopRequireDefault(_cors)
-var _express = require('express')
-var _express2 = _interopRequireDefault(_express)
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
-var _PortHandler = require('../../config/utils/PortHandler')
-var _constants = require('./constants')
-var _CookieHandler = require('./utils/CookieHandler')
-var _DetectBot = require('./utils/DetectBot')
-var _DetectBot2 = _interopRequireDefault(_DetectBot)
-var _DetectDevice = require('./utils/DetectDevice')
-var _DetectDevice2 = _interopRequireDefault(_DetectDevice)
-var _DetectLocale = require('./utils/DetectLocale')
-var _DetectLocale2 = _interopRequireDefault(_DetectLocale)
-var _DetectRedirect = require('./utils/DetectRedirect')
-var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect)
-var _DetectStaticExtension = require('./utils/DetectStaticExtension')
-var _DetectStaticExtension2 = _interopRequireDefault(_DetectStaticExtension)
-var _InitEnv = require('./utils/InitEnv')
+"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _child_process = require('child_process');
+var _cors = require('cors'); var _cors2 = _interopRequireDefault(_cors);
+var _express = require('express'); var _express2 = _interopRequireDefault(_express);
+var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+var _path = require('path'); var _path2 = _interopRequireDefault(_path);
+var _servestatic = require('serve-static'); var _servestatic2 = _interopRequireDefault(_servestatic);
+var _zlib = require('zlib');
+var _PortHandler = require('../../config/utils/PortHandler');
+var _constants = require('./constants');
+var _CookieHandler = require('./utils/CookieHandler');
+var _DetectBot = require('./utils/DetectBot'); var _DetectBot2 = _interopRequireDefault(_DetectBot);
+var _DetectDevice = require('./utils/DetectDevice'); var _DetectDevice2 = _interopRequireDefault(_DetectDevice);
+var _DetectLocale = require('./utils/DetectLocale'); var _DetectLocale2 = _interopRequireDefault(_DetectLocale);
+var _DetectRedirect = require('./utils/DetectRedirect'); var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect);
+var _DetectStaticExtension = require('./utils/DetectStaticExtension'); var _DetectStaticExtension2 = _interopRequireDefault(_DetectStaticExtension);
+var _InitEnv = require('./utils/InitEnv');
 
-const ServerConfig = _nullishCoalesce(
-	_optionalChain([
-		require,
-		'call',
-		(_) => _('./server.config'),
-		'optionalAccess',
-		(_2) => _2.default,
-	]),
-	() => ({})
-)
+const ServerConfig = _nullishCoalesce(_optionalChain([require, 'call', _ => _('./server.config'), 'optionalAccess', _2 => _2.default]), () => ( {}))
 
 const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
-const ENVIRONMENT = JSON.stringify({
-	ENV: _InitEnv.ENV,
-	MODE: _InitEnv.MODE,
-	ENV_MODE: _InitEnv.ENV_MODE,
-})
 
 require('events').EventEmitter.setMaxListeners(200)
 
@@ -78,10 +27,7 @@ const cleanResourceWithCondition = async () => {
 		const {
 			deleteResource,
 		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${_constants.resourceExtension}`)
-		const browsersPath = _path2.default.resolve(
-			__dirname,
-			'./puppeteer-ssr/browsers'
-		)
+		const browsersPath = _path2.default.resolve(__dirname, './puppeteer-ssr/browsers')
 
 		return Promise.all([
 			deleteResource(browsersPath),
@@ -94,30 +40,24 @@ const startServer = async () => {
 	await cleanResourceWithCondition()
 	let port =
 		_InitEnv.ENV !== 'development'
-			? _InitEnv.PROCESS_ENV.PORT ||
-			  _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
+			? _InitEnv.PROCESS_ENV.PORT || _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
 			: _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
-	port = await _PortHandler.findFreePort.call(
-		void 0,
-		port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080
-	)
+	port = await _PortHandler.findFreePort.call(void 0, port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080)
 	_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 
 	if (_InitEnv.ENV !== 'development') {
 		_InitEnv.PROCESS_ENV.PORT = port
 	}
 
-	const app = _express2.default.call(void 0)
+	const app = _express2.default.call(void 0, )
 	const server = require('http').createServer(app)
 
-	app.use(_cors2.default.call(void 0))
+	app.use(_cors2.default.call(void 0, ))
 	if (ServerConfig.crawler && !_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
 		app
 			.use(
 				'/robots.txt',
-				_express2.default.static(
-					_path2.default.resolve(__dirname, '../robots.txt')
-				)
+				_express2.default.static(_path2.default.resolve(__dirname, '../robots.txt'))
 			)
 			.use(function (req, res, next) {
 				const isStatic = _DetectStaticExtension2.default.call(void 0, req)
@@ -128,18 +68,50 @@ const startServer = async () => {
 				 * https://www.inchcalculator.com/convert/month-to-second/
 				 */
 				if (isStatic) {
-					if (_InitEnv.ENV !== 'development') {
-						res.set('Cache-Control', 'public, max-age=31556952')
-					}
+					const staticPath = _path2.default.resolve(__dirname, `../../dist/${req.url}`)
 
 					try {
-						res
-							.status(200)
-							.sendFile(
-								_path2.default.resolve(__dirname, `../../dist/${req.url}`)
-							)
-					} catch (err) {
-						res.status(404).send('File not found')
+						if (_InitEnv.ENV === 'development') {
+							res
+								.status(200)
+								.set('Cache-Control', 'public, max-age=31556952')
+								.sendFile(staticPath)
+						} else {
+							const contentEncoding = (() => {
+								const tmpHeaderAcceptEncoding =
+									req.headers['accept-encoding'] || ''
+								if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+								else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1)
+									return 'gzip'
+								return '' 
+							})()
+							res.set({
+								'Content-Encoding': contentEncoding,
+							})
+							const body = (() => {
+								const content = _fs2.default.readFileSync(staticPath)
+								const tmpBody =
+									contentEncoding === 'br'
+										? _zlib.brotliCompressSync.call(void 0, content)
+										: contentEncoding === 'gzip'
+										? _zlib.gzipSync.call(void 0, content)
+										: content
+
+								return tmpBody
+							})()
+
+							const mimeType = _servestatic2.default.mime.lookup(staticPath)
+
+							res
+								.status(200)
+								.set('Cache-Control', 'public, max-age=31556952')
+								.set({
+									'Content-type': mimeType,
+								})
+								.send(body)
+						}
+					} catch (e) {
+						res.status(404).send('File not found!')
 					}
 				} else {
 					next()
@@ -159,34 +131,29 @@ const startServer = async () => {
 				req.headers['botInfo'] ||
 				JSON.stringify(_DetectBot2.default.call(void 0, req))
 
-			_CookieHandler.setCookie.call(
-				void 0,
-				res,
-				`BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
-			)
+			_CookieHandler.setCookie.call(void 0, res, `BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`)
 
 			next()
 		})
 		.use(function (req, res, next) {
 			const localeInfo = (() => {
-				let tmpLocaleInfo = req['localeinfo'] || req['localeInfo']
+				let tmpLocaleInfo =
+					req.headers['localeinfo'] || req.headers['localeInfo']
 
-				if (tmpLocaleInfo) JSON.parse(tmpLocaleInfo)
-				else tmpLocaleInfo = _DetectLocale2.default.call(void 0, req)
+				if (tmpLocaleInfo) return JSON.parse(tmpLocaleInfo )
 
-				return tmpLocaleInfo
+				return _DetectLocale2.default.call(void 0, req)
 			})()
 
 			const enableLocale =
 				ServerConfig.locale.enable &&
 				Boolean(
 					!ServerConfig.locale.routes ||
-						!ServerConfig.locale.routes[req.url] ||
-						ServerConfig.locale.routes[req.url].enable
+						!ServerConfig.locale.routes[req.url ] ||
+						ServerConfig.locale.routes[req.url ].enable
 				)
 
-			_CookieHandler.setCookie.call(
-				void 0,
+			_CookieHandler.setCookie.call(void 0, 
 				res,
 				`LocaleInfo=${JSON.stringify(
 					localeInfo
@@ -194,31 +161,19 @@ const startServer = async () => {
 			)
 
 			if (enableLocale) {
-				_CookieHandler.setCookie.call(
-					void 0,
+				_CookieHandler.setCookie.call(void 0, 
 					res,
-					`lang=${_nullishCoalesce(
-						_optionalChain([
-							localeInfo,
-							'optionalAccess',
-							(_3) => _3.langSelected,
-						]),
-						() => ServerConfig.locale.defaultLang
-					)};Path=/`
+					`lang=${
+						_nullishCoalesce(_optionalChain([localeInfo, 'optionalAccess', _3 => _3.langSelected]), () => ( ServerConfig.locale.defaultLang))
+					};Path=/`
 				)
 
 				if (ServerConfig.locale.defaultCountry) {
-					_CookieHandler.setCookie.call(
-						void 0,
+					_CookieHandler.setCookie.call(void 0, 
 						res,
-						`country=${_nullishCoalesce(
-							_optionalChain([
-								localeInfo,
-								'optionalAccess',
-								(_4) => _4.countrySelected,
-							]),
-							() => ServerConfig.locale.defaultCountry
-						)};Path=/`
+						`country=${
+							_nullishCoalesce(_optionalChain([localeInfo, 'optionalAccess', _4 => _4.countrySelected]), () => ( ServerConfig.locale.defaultCountry))
+						};Path=/`
 					)
 				}
 			}
@@ -251,10 +206,21 @@ const startServer = async () => {
 	}
 	app
 		.use(function (req, res, next) {
-			_CookieHandler.setCookie.call(
-				void 0,
+			const environmentInfo = (() => {
+				const tmpEnvironmentInfo =
+					req.headers['environmentinfo'] || req.headers['environmentInfo']
+
+				if (tmpEnvironmentInfo) return tmpEnvironmentInfo
+
+				return JSON.stringify({
+					ENV: _InitEnv.ENV,
+					MODE: _InitEnv.MODE,
+					ENV_MODE: _InitEnv.ENV_MODE,
+				})
+			})()
+			_CookieHandler.setCookie.call(void 0, 
 				res,
-				`EnvironmentInfo=${ENVIRONMENT};Max-Age=${COOKIE_EXPIRED_SECOND}`
+				`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
 			)
 			next()
 		})
@@ -264,8 +230,7 @@ const startServer = async () => {
 				req.headers['deviceInfo'] ||
 				JSON.stringify(_DetectDevice2.default.call(void 0, req))
 
-			_CookieHandler.setCookie.call(
-				void 0,
+			_CookieHandler.setCookie.call(void 0, 
 				res,
 				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
 			)
@@ -276,13 +241,7 @@ const startServer = async () => {
 
 	server.listen(port, () => {
 		console.log(`Server started port ${port}. Press Ctrl+C to quit`)
-		_optionalChain([
-			process,
-			'access',
-			(_5) => _5.send,
-			'optionalCall',
-			(_6) => _6('ready'),
-		])
+		_optionalChain([process, 'access', _5 => _5.send, 'optionalCall', _6 => _6('ready')])
 	})
 
 	process.on('SIGINT', async function () {

@@ -1,11 +1,5 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-var _workerpool = require('workerpool')
-var _workerpool2 = _interopRequireDefault(_workerpool)
-var _constants = require('./constants')
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
+var _constants = require('./constants');
 
 const testPuppeteerSSRService = (() => {
 	const _init = () => {
@@ -32,4 +26,4 @@ const testPuppeteerSSRService = (() => {
 
 testPuppeteerSSRService.init()
 
-exports.default = testPuppeteerSSRService
+exports. default = testPuppeteerSSRService

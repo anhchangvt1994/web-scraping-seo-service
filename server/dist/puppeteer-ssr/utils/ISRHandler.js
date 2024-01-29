@@ -1,73 +1,51 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-function _nullishCoalesce(lhs, rhsFn) {
-	if (lhs != null) {
-		return lhs
-	} else {
-		return rhsFn()
-	}
-}
-function _optionalChain(ops) {
-	let lastAccessLHS = undefined
-	let value = ops[0]
-	let i = 1
-	while (i < ops.length) {
-		const op = ops[i]
-		const fn = ops[i + 1]
-		i += 2
-		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
-			return undefined
-		}
-		if (op === 'access' || op === 'optionalAccess') {
-			lastAccessLHS = value
-			value = fn(value)
-		} else if (op === 'call' || op === 'optionalCall') {
-			value = fn((...args) => value.call(lastAccessLHS, ...args))
-			lastAccessLHS = undefined
-		}
-	}
-	return value
-}
-var _workerpool = require('workerpool')
-var _workerpool2 = _interopRequireDefault(_workerpool)
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
 
-var _constants = require('../../constants')
-var _serverconfig = require('../../server.config')
-var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
-var _ConsoleHandler = require('../../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _InitEnv = require('../../utils/InitEnv')
 
-var _constants3 = require('../constants')
 
-var _BrowserManager = require('./BrowserManager')
-var _BrowserManager2 = _interopRequireDefault(_BrowserManager)
-var _CacheManager = require('./CacheManager')
-var _CacheManager2 = _interopRequireDefault(_CacheManager)
+
+
+
+var _constants = require('../../constants');
+var _serverconfig = require('../../server.config'); var _serverconfig2 = _interopRequireDefault(_serverconfig);
+var _ConsoleHandler = require('../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _InitEnv = require('../../utils/InitEnv');
+
+
+
+
+
+
+var _constants3 = require('../constants');
+
+var _BrowserManager = require('./BrowserManager'); var _BrowserManager2 = _interopRequireDefault(_BrowserManager);
+var _CacheManager = require('./CacheManager'); var _CacheManager2 = _interopRequireDefault(_CacheManager);
 
 const browserManager = (() => {
-	if (_InitEnv.ENV_MODE === 'development') return undefined
+	if (_InitEnv.ENV_MODE === 'development') return undefined 
 	if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
-		return _BrowserManager2.default.call(
-			void 0,
-			() => `${_constants.userDataPath}/user_data_${Date.now()}`
-		)
-	return _BrowserManager2.default.call(void 0)
+		return _BrowserManager2.default.call(void 0, () => `${_constants.userDataPath}/user_data_${Date.now()}`)
+	return _BrowserManager2.default.call(void 0, )
 })()
+
+
+
+
+
+
 
 const getRestOfDuration = (startGenerating, gapDuration = 0) => {
 	if (!startGenerating) return 0
 
-	return (
-		_constants3.DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
-	)
+	return _constants3.DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
 } // getRestOfDuration
 
-const fetchData = async (input, init, reqData) => {
+const fetchData = async (
+	input,
+	init,
+	reqData
+) => {
 	try {
 		const params = new URLSearchParams()
 		if (reqData) {
@@ -111,9 +89,7 @@ const waitResponse = (() => {
 	const requestFailDuration =
 		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250
 	const maximumTimeout =
-		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE
-			? 5000
-			: 5000
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 5000 : 5000
 
 	return async (page, url, duration) => {
 		let response
@@ -160,7 +136,9 @@ const waitResponse = (() => {
 					setTimeout(resolveAfterPageLoadInFewSecond, maximumTimeout)
 				})
 
-				resolve(result)
+				setTimeout(() => {
+					resolve(result)
+				}, 100)
 			})
 		} catch (err) {
 			throw err
@@ -176,7 +154,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 	const startGenerating = Date.now()
 	if (getRestOfDuration(startGenerating, gapDurationDefault) <= 0) return
 
-	const cacheManager = _CacheManager2.default.call(void 0)
+	const cacheManager = _CacheManager2.default.call(void 0, )
 
 	let restOfDuration = getRestOfDuration(startGenerating, gapDurationDefault)
 
@@ -190,21 +168,12 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 	}
 
 	let html = ''
+	let isForceToOptimizeAndCompress = false
 	let status = 200
-	const specialInfo = _nullishCoalesce(
-		_optionalChain([
-			_constants3.regexQueryStringSpecialInfo,
-			'access',
-			(_) => _.exec,
-			'call',
-			(_2) => _2(url),
-			'optionalAccess',
-			(_3) => _3.groups,
-		]),
-		() => ({})
-	)
+	const specialInfo = _nullishCoalesce(_optionalChain([_constants3.regexQueryStringSpecialInfo, 'access', _ => _.exec, 'call', _2 => _2(url), 'optionalAccess', _3 => _3.groups]), () => ( {}))
 
 	if (_serverconfig2.default.crawler) {
+		isForceToOptimizeAndCompress = true
 		const requestParams = {
 			startGenerating,
 			isFirstRequest: true,
@@ -212,8 +181,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 		}
 
 		if (_serverconfig2.default.crawlerSecretKey) {
-			requestParams['crawlerSecretKey'] =
-				_serverconfig2.default.crawlerSecretKey
+			requestParams['crawlerSecretKey'] = _serverconfig2.default.crawlerSecretKey
 		}
 
 		const headers = { ...specialInfo }
@@ -305,16 +273,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 						return _ConsoleHandler2.default.error(err)
 					}
 				} finally {
-					status = _nullishCoalesce(
-						_optionalChain([
-							response,
-							'optionalAccess',
-							(_4) => _4.status,
-							'optionalCall',
-							(_5) => _5(),
-						]),
-						() => status
-					)
+					status = _nullishCoalesce(_optionalChain([response, 'optionalAccess', _4 => _4.status, 'optionalCall', _5 => _5()]), () => ( status))
 					_ConsoleHandler2.default.log(`Internal crawler status: ${status}`)
 
 					res(true)
@@ -358,7 +317,11 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 		)
 
 		try {
-			html = await optimizeHTMLContentPool.exec('optimizeContent', [html, true])
+			html = await optimizeHTMLContentPool.exec('optimizeContent', [
+				html,
+				true,
+				isForceToOptimizeAndCompress,
+			])
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
 			return
@@ -382,4 +345,4 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 	return result
 }
 
-exports.default = ISRHandler
+exports. default = ISRHandler

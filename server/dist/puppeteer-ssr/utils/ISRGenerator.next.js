@@ -1,48 +1,27 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-function _optionalChain(ops) {
-	let lastAccessLHS = undefined
-	let value = ops[0]
-	let i = 1
-	while (i < ops.length) {
-		const op = ops[i]
-		const fn = ops[i + 1]
-		i += 2
-		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
-			return undefined
-		}
-		if (op === 'access' || op === 'optionalAccess') {
-			lastAccessLHS = value
-			value = fn(value)
-		} else if (op === 'call' || op === 'optionalCall') {
-			value = fn((...args) => value.call(lastAccessLHS, ...args))
-			lastAccessLHS = undefined
-		}
-	}
-	return value
-}
-var _fs = require('fs')
-var _fs2 = _interopRequireDefault(_fs)
-var _workerpool = require('workerpool')
-var _workerpool2 = _interopRequireDefault(_workerpool)
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
 
-var _constants = require('../../constants')
-var _ConsoleHandler = require('../../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _InitEnv = require('../../utils/InitEnv')
-var _constants3 = require('../constants')
 
-var _CacheManager = require('./CacheManager')
-var _CacheManager2 = _interopRequireDefault(_CacheManager)
-var _ISRHandler = require('./ISRHandler')
-var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
 
-const cacheManager = _CacheManager2.default.call(void 0)
 
-const fetchData = async (input, init, reqData) => {
+
+
+
+var _constants = require('../../constants');
+var _ConsoleHandler = require('../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _InitEnv = require('../../utils/InitEnv');
+var _constants3 = require('../constants');
+
+var _CacheManager = require('./CacheManager'); var _CacheManager2 = _interopRequireDefault(_CacheManager);
+var _ISRHandler = require('./ISRHandler'); var _ISRHandler2 = _interopRequireDefault(_ISRHandler);
+
+const cacheManager = _CacheManager2.default.call(void 0, )
+
+const fetchData = async (
+	input,
+	init,
+	reqData
+) => {
 	try {
 		const params = new URLSearchParams()
 		if (reqData) {
@@ -67,12 +46,18 @@ const fetchData = async (input, init, reqData) => {
 const getRestOfDuration = (startGenerating, gapDuration = 0) => {
 	if (!startGenerating) return 0
 
-	return (
-		_constants3.DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
-	)
+	return _constants3.DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
 } // getRestOfDuration
 
-const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
+
+
+
+
+
+const SSRGenerator = async ({
+	isSkipWaiting = false,
+	...ISRHandlerParams
+}) => {
 	if (!_InitEnv.PROCESS_ENV.BASE_URL) {
 		_ConsoleHandler2.default.error('Missing base url!')
 		return
@@ -85,10 +70,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 
 	const startGenerating = Date.now()
 
-	if (
-		_constants.SERVER_LESS &&
-		_constants.BANDWIDTH_LEVEL === _constants.BANDWIDTH_LEVEL_LIST.TWO
-	)
+	if (_constants.SERVER_LESS && _constants.BANDWIDTH_LEVEL === _constants.BANDWIDTH_LEVEL_LIST.TWO)
 		fetchData(`${_InitEnv.PROCESS_ENV.BASE_URL}/cleaner-service`, {
 			method: 'POST',
 			headers: new Headers({
@@ -102,9 +84,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 
 	if (result) {
 		if (result.isRaw) {
-			_ConsoleHandler2.default.log(
-				'File và nội dung đã tồn tại, đang tiến hành Optimize file'
-			)
+			_ConsoleHandler2.default.log('File và nội dung đã tồn tại, đang tiến hành Optimize file')
 			const asyncTmpResult = new Promise(async (res) => {
 				const optimizeHTMLContentPool = _workerpool2.default.pool(
 					__dirname + `/OptimizeHtml.worker.${_constants.resourceExtension}`,
@@ -117,54 +97,50 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 				if (!result || !result.file || !_fs2.default.existsSync(result.file))
 					res(undefined)
 
-				_fs2.default.readFile(
-					_optionalChain([result, 'optionalAccess', (_) => _.file]),
-					async (err, data) => {
-						if (err) return res(undefined)
+				_fs2.default.readFile(_optionalChain([result, 'optionalAccess', _ => _.file]) , async (err, data) => {
+					if (err) return res(undefined)
 
-						const restOfDuration = (() => {
-							const duration = getRestOfDuration(startGenerating, 2000)
+					const restOfDuration = (() => {
+						const duration = getRestOfDuration(startGenerating, 2000)
 
-							return duration > 7000 ? 7000 : duration
-						})()
+						return duration > 7000 ? 7000 : duration
+					})()
 
-						let html = data.toString('utf-8')
-						const timeout = setTimeout(async () => {
-							optimizeHTMLContentPool.terminate()
-							const result = await cacheManager.set({
+					let html = data.toString('utf-8')
+					const timeout = setTimeout(async () => {
+						optimizeHTMLContentPool.terminate()
+						const result = await cacheManager.set({
+							html,
+							url: ISRHandlerParams.url,
+							isRaw: false,
+						})
+
+						res(result)
+					}, restOfDuration)
+
+					let tmpHTML = ''
+
+					try {
+						if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
+							tmpHTML = await optimizeHTMLContentPool.exec('compressContent', [
 								html,
-								url: ISRHandlerParams.url,
-								isRaw: false,
-							})
+							])
+					} catch (err) {
+						tmpHTML = html
+						// Console.error(err)
+					} finally {
+						clearTimeout(timeout)
+						optimizeHTMLContentPool.terminate()
 
-							res(result)
-						}, restOfDuration)
+						const result = await cacheManager.set({
+							html: tmpHTML,
+							url: ISRHandlerParams.url,
+							isRaw: false,
+						})
 
-						let tmpHTML = ''
-
-						try {
-							if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
-								tmpHTML = await optimizeHTMLContentPool.exec(
-									'compressContent',
-									[html]
-								)
-						} catch (err) {
-							tmpHTML = html
-							// Console.error(err)
-						} finally {
-							clearTimeout(timeout)
-							optimizeHTMLContentPool.terminate()
-
-							const result = await cacheManager.set({
-								html: tmpHTML,
-								url: ISRHandlerParams.url,
-								isRaw: false,
-							})
-
-							res(result)
-						}
+						res(result)
 					}
-				)
+				})
 			})
 
 			const tmpResult = await asyncTmpResult
@@ -213,10 +189,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 		result = await cacheManager.get(ISRHandlerParams.url)
 
 		_ConsoleHandler2.default.log('Check for condition to create new page.')
-		_ConsoleHandler2.default.log(
-			'result.available',
-			_optionalChain([result, 'optionalAccess', (_2) => _2.available])
-		)
+		_ConsoleHandler2.default.log('result.available', _optionalChain([result, 'optionalAccess', _2 => _2.available]))
 
 		if (result) {
 			const isValidToScraping = (() => {
@@ -228,9 +201,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 						return (
 							!result.available &&
 							createTimeDuration >=
-								(_constants.SERVER_LESS &&
-								_constants.BANDWIDTH_LEVEL ===
-									_constants.BANDWIDTH_LEVEL_LIST.ONE
+								(_constants.SERVER_LESS && _constants.BANDWIDTH_LEVEL === _constants.BANDWIDTH_LEVEL_LIST.ONE
 									? 2000
 									: 10000)
 						)
@@ -272,8 +243,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 							res,
 							_constants.SERVER_LESS
 								? 5000
-								: _constants.BANDWIDTH_LEVEL >
-								  _constants.BANDWIDTH_LEVEL_LIST.ONE
+								: _constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE
 								? 10000
 								: 20000
 						)
@@ -291,11 +261,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 					result = tmpResult || result
 				}
 
-				if (
-					result.html &&
-					result.status === 200 &&
-					_constants3.DISABLE_SSR_CACHE
-				) {
+				if (result.html && result.status === 200 && _constants3.DISABLE_SSR_CACHE) {
 					const optimizeHTMLContentPool = _workerpool2.default.pool(
 						__dirname + `/OptimizeHtml.worker.${_constants.resourceExtension}`,
 						{
@@ -354,4 +320,4 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 	return result
 }
 
-exports.default = SSRGenerator
+exports. default = SSRGenerator
