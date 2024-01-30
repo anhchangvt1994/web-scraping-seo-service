@@ -1,348 +1,360 @@
-import { Page } from 'puppeteer-core'
-import WorkerPool from 'workerpool'
+import { Page } from "puppeteer-core";
+import WorkerPool from "workerpool";
 import {
-	BANDWIDTH_LEVEL,
-	BANDWIDTH_LEVEL_LIST,
-	POWER_LEVEL,
-	POWER_LEVEL_LIST,
-	resourceExtension,
-	userDataPath,
-} from '../../constants'
-import ServerConfig from '../../server.config'
-import Console from '../../utils/ConsoleHandler'
-import { ENV_MODE } from '../../utils/InitEnv'
+  BANDWIDTH_LEVEL,
+  BANDWIDTH_LEVEL_LIST,
+  POWER_LEVEL,
+  POWER_LEVEL_LIST,
+  resourceExtension,
+  userDataPath,
+} from "../../constants";
+import ServerConfig from "../../server.config";
+import Console from "../../utils/ConsoleHandler";
+import { ENV_MODE } from "../../utils/InitEnv";
 import {
-	CACHEABLE_STATUS_CODE,
-	DURATION_TIMEOUT,
-	MAX_WORKERS,
-	regexNotFoundPageID,
-	regexQueryStringSpecialInfo,
-} from '../constants'
-import { ISSRResult } from '../types'
-import BrowserManager, { IBrowser } from './BrowserManager'
-import CacheManager from './CacheManager'
+  CACHEABLE_STATUS_CODE,
+  DURATION_TIMEOUT,
+  MAX_WORKERS,
+  regexNotFoundPageID,
+  regexQueryStringSpecialInfo,
+} from "../constants";
+import { ISSRResult } from "../types";
+import BrowserManager, { IBrowser } from "./BrowserManager";
+import CacheManager from "./CacheManager";
 
 const browserManager = (() => {
-	if (ENV_MODE === 'development') return undefined as unknown as IBrowser
-	if (POWER_LEVEL === POWER_LEVEL_LIST.THREE)
-		return BrowserManager(() => `${userDataPath}/user_data_${Date.now()}`)
-	return BrowserManager()
-})()
+  if (ENV_MODE === "development") return undefined as unknown as IBrowser;
+  if (POWER_LEVEL === POWER_LEVEL_LIST.THREE)
+    return BrowserManager(() => `${userDataPath}/user_data_${Date.now()}`);
+  return BrowserManager();
+})();
 
 interface IISRHandlerParam {
-	startGenerating: number
-	isFirstRequest: boolean
-	url: string
+  startGenerating: number;
+  isFirstRequest: boolean;
+  url: string;
 }
 
-const getRestOfDuration = (startGenerating, gapDuration = 0) => {
-	if (!startGenerating) return 0
+const _getRestOfDuration = (startGenerating, gapDuration = 0) => {
+  if (!startGenerating) return 0;
 
-	return DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
-} // getRestOfDuration
+  return DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating);
+}; // _getRestOfDuration
+
+const _getSafePage = (page: Page | undefined) => {
+  const SafePage = page;
+
+  return () => {
+    if (SafePage && SafePage.isClosed()) return;
+    return SafePage;
+  };
+}; // _getSafePage
 
 const fetchData = async (
-	input: RequestInfo | URL,
-	init?: RequestInit | undefined,
-	reqData?: { [key: string]: any }
+  input: RequestInfo | URL,
+  init?: RequestInit | undefined,
+  reqData?: { [key: string]: any }
 ) => {
-	try {
-		const params = new URLSearchParams()
-		if (reqData) {
-			for (const key in reqData) {
-				params.append(key, reqData[key])
-			}
-		}
+  try {
+    const params = new URLSearchParams();
+    if (reqData) {
+      for (const key in reqData) {
+        params.append(key, reqData[key]);
+      }
+    }
 
-		const response = await fetch(
-			input + (reqData ? `?${params.toString()}` : ''),
-			init
-		).then(async (res) => ({
-			status: res.status,
-			data: await res.text(),
-		}))
+    const response = await fetch(
+      input + (reqData ? `?${params.toString()}` : ""),
+      init
+    ).then(async (res) => ({
+      status: res.status,
+      data: await res.text(),
+    }));
 
-		const data = /^{(.|[\r\n])*?}$/.test(response.data)
-			? JSON.parse(response.data)
-			: response.data
+    const data = /^{(.|[\r\n])*?}$/.test(response.data)
+      ? JSON.parse(response.data)
+      : response.data;
 
-		return {
-			...response,
-			data,
-		}
-	} catch (error) {
-		Console.error(error)
-		return {
-			status: 500,
-			data: '',
-		}
-	}
-} // fetchData
+    return {
+      ...response,
+      data,
+    };
+  } catch (error) {
+    Console.error(error);
+    return {
+      status: 500,
+      data: "",
+    };
+  }
+}; // fetchData
 
 const waitResponse = (() => {
-	const firstWaitingDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 500
-	const defaultRequestWaitingDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 500
-	const requestServedFromCacheDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250
-	const requestFailDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250
-	const maximumTimeout =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 5000 : 5000
+  const firstWaitingDuration =
+    BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 500;
+  const defaultRequestWaitingDuration =
+    BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 500;
+  const requestServedFromCacheDuration =
+    BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250;
+  const requestFailDuration =
+    BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250;
+  const maximumTimeout =
+    BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 5000 : 5000;
 
-	return async (page: Page, url: string, duration: number) => {
-		let response
-		try {
-			response = await new Promise(async (resolve, reject) => {
-				const result = await new Promise<any>((resolveAfterPageLoad) => {
-					page
-						.goto(url.split('?')[0], {
-							waitUntil: 'domcontentloaded',
-						})
-						.then((res) => {
-							setTimeout(() => resolveAfterPageLoad(res), firstWaitingDuration)
-						})
-						.catch((err) => {
-							reject(err)
-						})
-				})
+  return async (page: Page, url: string, duration: number) => {
+    const safePage = _getSafePage(page);
+    let response;
+    try {
+      response = await new Promise(async (resolve, reject) => {
+        const result = await new Promise<any>((resolveAfterPageLoad) => {
+          page
+            .goto(url.split("?")[0], {
+              waitUntil: "domcontentloaded",
+            })
+            .then((res) => {
+              setTimeout(() => resolveAfterPageLoad(res), firstWaitingDuration);
+            })
+            .catch((err) => {
+              reject(err);
+            });
+        });
 
-				const html = await page.content()
+        const html = (await safePage()?.content()) ?? "";
 
-				if (regexNotFoundPageID.test(html)) return resolve(result)
+        if (regexNotFoundPageID.test(html)) return resolve(result);
 
-				await new Promise((resolveAfterPageLoadInFewSecond) => {
-					const startTimeout = (() => {
-						let timeout
-						return (duration = defaultRequestWaitingDuration) => {
-							if (timeout) clearTimeout(timeout)
-							timeout = setTimeout(resolveAfterPageLoadInFewSecond, duration)
-						}
-					})()
+        await new Promise((resolveAfterPageLoadInFewSecond) => {
+          const startTimeout = (() => {
+            let timeout;
+            return (duration = defaultRequestWaitingDuration) => {
+              if (timeout) clearTimeout(timeout);
+              timeout = setTimeout(resolveAfterPageLoadInFewSecond, duration);
+            };
+          })();
 
-					startTimeout()
+          startTimeout();
 
-					page.on('requestfinished', () => {
-						startTimeout()
-					})
-					page.on('requestservedfromcache', () => {
-						startTimeout(requestServedFromCacheDuration)
-					})
-					page.on('requestfailed', () => {
-						startTimeout(requestFailDuration)
-					})
+          safePage()?.on("requestfinished", () => {
+            startTimeout();
+          });
+          safePage()?.on("requestservedfromcache", () => {
+            startTimeout(requestServedFromCacheDuration);
+          });
+          safePage()?.on("requestfailed", () => {
+            startTimeout(requestFailDuration);
+          });
 
-					setTimeout(resolveAfterPageLoadInFewSecond, maximumTimeout)
-				})
+          setTimeout(resolveAfterPageLoadInFewSecond, maximumTimeout);
+        });
 
-				setTimeout(() => {
-					resolve(result)
-				}, 100)
-			})
-		} catch (err) {
-			throw err
-		}
+        setTimeout(() => {
+          resolve(result);
+        }, 100);
+      });
+    } catch (err) {
+      throw err;
+    }
 
-		return response
-	}
-})() // waitResponse
+    return response;
+  };
+})(); // waitResponse
 
-const gapDurationDefault = 1500
+const gapDurationDefault = 1500;
 
 const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
-	const startGenerating = Date.now()
-	if (getRestOfDuration(startGenerating, gapDurationDefault) <= 0) return
+  const startGenerating = Date.now();
+  if (_getRestOfDuration(startGenerating, gapDurationDefault) <= 0) return;
 
-	const cacheManager = CacheManager()
+  const cacheManager = CacheManager();
 
-	let restOfDuration = getRestOfDuration(startGenerating, gapDurationDefault)
+  let restOfDuration = _getRestOfDuration(startGenerating, gapDurationDefault);
 
-	if (restOfDuration <= 0) {
-		if (!isFirstRequest) {
-			const tmpResult = await cacheManager.achieve(url)
+  if (restOfDuration <= 0) {
+    if (!isFirstRequest) {
+      const tmpResult = await cacheManager.achieve(url);
 
-			return tmpResult
-		}
-		return
-	}
+      return tmpResult;
+    }
+    return;
+  }
 
-	let html = ''
-	let isForceToOptimizeAndCompress = false
-	let status = 200
-	const specialInfo = regexQueryStringSpecialInfo.exec(url)?.groups ?? {}
+  let html = "";
+  let isForceToOptimizeAndCompress = false;
+  let status = 200;
+  const specialInfo = regexQueryStringSpecialInfo.exec(url)?.groups ?? {};
 
-	if (ServerConfig.crawler) {
-		isForceToOptimizeAndCompress = true
-		const requestParams = {
-			startGenerating,
-			isFirstRequest: true,
-			url: url.split('?')[0],
-		}
+  if (ServerConfig.crawler) {
+    isForceToOptimizeAndCompress = true;
+    const requestParams = {
+      startGenerating,
+      isFirstRequest: true,
+      url: url.split("?")[0],
+    };
 
-		if (ServerConfig.crawlerSecretKey) {
-			requestParams['crawlerSecretKey'] = ServerConfig.crawlerSecretKey
-		}
+    if (ServerConfig.crawlerSecretKey) {
+      requestParams["crawlerSecretKey"] = ServerConfig.crawlerSecretKey;
+    }
 
-		const headers = { ...specialInfo }
+    const headers = { ...specialInfo };
 
-		const botInfo = JSON.parse(headers['botInfo'])
+    const botInfo = JSON.parse(headers["botInfo"]);
 
-		if (!botInfo.isBot) {
-			headers['botInfo'] = JSON.stringify({
-				name: 'unknown',
-				isBot: true,
-			})
-		}
+    if (!botInfo.isBot) {
+      headers["botInfo"] = JSON.stringify({
+        name: "unknown",
+        isBot: true,
+      });
+    }
 
-		try {
-			const result = await fetchData(
-				ServerConfig.crawler,
-				{
-					method: 'GET',
-					headers: new Headers({
-						Accept: 'text/html; charset=utf-8',
-						...headers,
-					}),
-				},
-				requestParams
-			)
+    try {
+      const result = await fetchData(
+        ServerConfig.crawler,
+        {
+          method: "GET",
+          headers: new Headers({
+            Accept: "text/html; charset=utf-8",
+            ...headers,
+          }),
+        },
+        requestParams
+      );
 
-			if (result) {
-				status = result.status
-				html = result.data
-			}
-			Console.log('External crawler status: ', status)
-		} catch (err) {
-			Console.log('Crawler is fail!')
-			Console.error(err)
-		}
-	}
+      if (result) {
+        status = result.status;
+        html = result.data;
+      }
+      Console.log("External crawler status: ", status);
+    } catch (err) {
+      Console.log("Crawler is fail!");
+      Console.error(err);
+    }
+  }
 
-	if (!ServerConfig.crawler || [404, 500].includes(status)) {
-		Console.log('Create new page')
-		const page = await browserManager.newPage()
-		Console.log('Create new page success!')
+  if (!ServerConfig.crawler || [404, 500].includes(status)) {
+    Console.log("Create new page");
+    const page = await browserManager.newPage();
+    const safePage = _getSafePage(page);
 
-		if (!page) {
-			if (!page && !isFirstRequest) {
-				const tmpResult = await cacheManager.achieve(url)
+    Console.log("Create new page success!");
 
-				return tmpResult
-			}
-			return
-		}
+    if (!page) {
+      if (!page && !isFirstRequest) {
+        const tmpResult = await cacheManager.achieve(url);
 
-		let isGetHtmlProcessError = false
+        return tmpResult;
+      }
+      return;
+    }
 
-		try {
-			// await page.waitForNetworkIdle({ idleTime: 150 })
-			await page.setRequestInterception(true)
-			page.on('request', (req) => {
-				const resourceType = req.resourceType()
+    let isGetHtmlProcessError = false;
 
-				if (resourceType === 'stylesheet') {
-					req.respond({ status: 200, body: 'aborted' })
-				} else if (
-					/(socket.io.min.js)+(?:$)|data:image\/[a-z]*.?\;base64/.test(url) ||
-					/font|image|media|imageset/.test(resourceType)
-				) {
-					req.abort()
-				} else {
-					req.continue()
-				}
-			})
+    try {
+      // await safePage()?.waitForNetworkIdle({ idleTime: 150 })
+      await safePage()?.setRequestInterception(true);
+      safePage()?.on("request", (req) => {
+        const resourceType = req.resourceType();
 
-			await page.setExtraHTTPHeaders({
-				...specialInfo,
-				service: 'puppeteer',
-			})
+        if (resourceType === "stylesheet") {
+          req.respond({ status: 200, body: "aborted" });
+        } else if (
+          /(socket.io.min.js)+(?:$)|data:image\/[a-z]*.?\;base64/.test(url) ||
+          /font|image|media|imageset/.test(resourceType)
+        ) {
+          req.abort();
+        } else {
+          req.continue();
+        }
+      });
 
-			await new Promise(async (res) => {
-				Console.log(`Start to crawl: ${url}`)
+      await safePage()?.setExtraHTTPHeaders({
+        ...specialInfo,
+        service: "puppeteer",
+      });
 
-				let response
+      await new Promise(async (res) => {
+        Console.log(`Start to crawl: ${url}`);
 
-				try {
-					response = await waitResponse(page, url, restOfDuration)
-				} catch (err) {
-					if (err.name !== 'TimeoutError') {
-						isGetHtmlProcessError = true
-						res(false)
-						await page.close()
-						return Console.error(err)
-					}
-				} finally {
-					status = response?.status?.() ?? status
-					Console.log(`Internal crawler status: ${status}`)
+        let response;
 
-					res(true)
-				}
-			})
-		} catch (err) {
-			Console.log('Crawler is fail!')
-			Console.error(err)
-			await page.close()
-			return {
-				status: 500,
-			}
-		}
+        try {
+          response = await waitResponse(page, url, restOfDuration);
+        } catch (err) {
+          if (err.name !== "TimeoutError") {
+            isGetHtmlProcessError = true;
+            res(false);
+            await safePage()?.close();
+            return Console.error(err);
+          }
+        } finally {
+          status = response?.status?.() ?? status;
+          Console.log(`Internal crawler status: ${status}`);
 
-		if (isGetHtmlProcessError)
-			return {
-				status: 500,
-			}
+          res(true);
+        }
+      });
+    } catch (err) {
+      Console.log("Crawler is fail!");
+      Console.error(err);
+      await safePage()?.close();
+      return {
+        status: 500,
+      };
+    }
 
-		try {
-			html = await page.content() // serialized HTML of page DOM.
-			await page.close()
-		} catch (err) {
-			Console.error(err)
-			return
-		}
+    if (isGetHtmlProcessError)
+      return {
+        status: 500,
+      };
 
-		status = html && regexNotFoundPageID.test(html) ? 404 : 200
-	}
+    try {
+      html = (await safePage()?.content()) ?? ""; // serialized HTML of page DOM.
+      await safePage()?.close();
+    } catch (err) {
+      Console.error(err);
+      return;
+    }
 
-	restOfDuration = getRestOfDuration(startGenerating)
+    status = html && regexNotFoundPageID.test(html) ? 404 : 200;
+  }
 
-	let result: ISSRResult
-	if (CACHEABLE_STATUS_CODE[status]) {
-		const optimizeHTMLContentPool = WorkerPool.pool(
-			__dirname + `/OptimizeHtml.worker.${resourceExtension}`,
-			{
-				minWorkers: 2,
-				maxWorkers: MAX_WORKERS,
-			}
-		)
+  restOfDuration = _getRestOfDuration(startGenerating);
 
-		try {
-			html = await optimizeHTMLContentPool.exec('optimizeContent', [
-				html,
-				true,
-				isForceToOptimizeAndCompress,
-			])
-		} catch (err) {
-			Console.error(err)
-			return
-		} finally {
-			optimizeHTMLContentPool.terminate()
-		}
+  let result: ISSRResult;
+  if (CACHEABLE_STATUS_CODE[status]) {
+    const optimizeHTMLContentPool = WorkerPool.pool(
+      __dirname + `/OptimizeHtml.worker.${resourceExtension}`,
+      {
+        minWorkers: 2,
+        maxWorkers: MAX_WORKERS,
+      }
+    );
 
-		result = await cacheManager.set({
-			html,
-			url,
-			isRaw: true,
-		})
-	} else {
-		await cacheManager.remove(url)
-		return {
-			status,
-			html: status === 404 ? 'Page not found!' : html,
-		}
-	}
+    try {
+      html = await optimizeHTMLContentPool.exec("optimizeContent", [
+        html,
+        true,
+        isForceToOptimizeAndCompress,
+      ]);
+    } catch (err) {
+      Console.error(err);
+      return;
+    } finally {
+      optimizeHTMLContentPool.terminate();
+    }
 
-	return result
-}
+    result = await cacheManager.set({
+      html,
+      url,
+      isRaw: true,
+    });
+  } else {
+    await cacheManager.remove(url);
+    return {
+      status,
+      html: status === 404 ? "Page not found!" : html,
+    };
+  }
 
-export default ISRHandler
+  return result;
+};
+
+export default ISRHandler;

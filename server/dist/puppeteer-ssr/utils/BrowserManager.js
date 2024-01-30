@@ -39,6 +39,15 @@ var _constants3 = require('../constants');
   }
 }; exports.deleteUserDataDir = deleteUserDataDir; // deleteUserDataDir
 
+const _getSafePage = (page) => {
+  let SafePage = page;
+
+  return () => {
+    if (SafePage && SafePage.isClosed()) return;
+    return SafePage;
+  };
+}; // _getSafePage
+
 const BrowserManager = (
   userDataDir = () => `${_constants.userDataPath}/user_data`
 ) => {
@@ -131,39 +140,29 @@ const BrowserManager = (
 
     if (browserLaunch) {
       try {
-        let requests = 0;
         let tabsClosed = 0;
         const browser = (await browserLaunch) ;
 
         browser.on("createNewPage", (async (page) => {
-          requests++;
-          console.log("=================");
-          console.log("requests", requests);
-          console.log("=================");
-          if (requests === 20) browserLaunch = null;
+          const safePage = _getSafePage(page);
           await new Promise((resolveCloseTab) => {
-            // const timeoutCloseTab = setTimeout(() => {
-            // if (!page.isClosed()) {
-            //   page.close({
-            //     runBeforeUnload: true,
-            //   });
-            // }
-            //   resolveCloseTab(null);
-            // }, 180000);
-            page.once("close", () => {
-              // clearTimeout(timeoutCloseTab);
+            const timeoutCloseTab = setTimeout(() => {
+              const tmpPage = safePage();
+              if (!tmpPage) resolveCloseTab(null);
+              else if (!tmpPage.isClosed()) {
+                tmpPage.close();
+              }
+            }, 180000);
+            _optionalChain([safePage, 'call', _5 => _5(), 'optionalAccess', _6 => _6.once, 'call', _7 => _7("close", () => {
+              clearTimeout(timeoutCloseTab);
               resolveCloseTab(null);
-            });
+            })]);
           });
 
           tabsClosed++;
-          console.log("=================");
-          console.log("tabsClosed", tabsClosed);
-          console.log("=================");
 
-          if (!_constants.SERVER_LESS && tabsClosed >= 20 && tabsClosed === requests) {
-            console.log("CLOSED<=============");
-            // browser.close();
+          if (!_constants.SERVER_LESS && tabsClosed === maxRequestPerBrowser) {
+            setTimeout(() => browser.close(), 250);
             exports.deleteUserDataDir.call(void 0, selfUserDataDirPath);
           }
         }) );
@@ -178,15 +177,15 @@ const BrowserManager = (
   }
 
   const _get = async () => {
-    if (!browserLaunch) {
+    if (!browserLaunch || !_isReady()) {
       __launch();
     }
 
     totalRequests++;
     const curBrowserLaunch = browserLaunch;
 
-    const pages = await _asyncNullishCoalesce(await _asyncOptionalChain([(await await _asyncOptionalChain([(await curBrowserLaunch), 'optionalAccess', async _5 => _5.pages, 'call', async _6 => _6()])), 'optionalAccess', async _7 => _7.length]), async () => ( 0));
-    await new Promise((res) => setTimeout(res, pages * 50));
+    const pages = await _asyncNullishCoalesce(await _asyncOptionalChain([(await await _asyncOptionalChain([(await curBrowserLaunch), 'optionalAccess', async _8 => _8.pages, 'call', async _9 => _9()])), 'optionalAccess', async _10 => _10.length]), async () => ( 0));
+    await new Promise((res) => setTimeout(res, pages * 20));
 
     return curBrowserLaunch ;
   }; // _get
@@ -196,7 +195,7 @@ const BrowserManager = (
     let page;
     try {
       browser = await _get();
-      page = await _optionalChain([browser, 'optionalAccess', _8 => _8.newPage, 'optionalCall', _9 => _9()]);
+      page = await _optionalChain([browser, 'optionalAccess', _11 => _11.newPage, 'optionalCall', _12 => _12()]);
 
       if (!page) {
         __launch();
