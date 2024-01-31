@@ -3,6 +3,7 @@ import path from "path";
 import { Browser, Page } from "puppeteer-core";
 import WorkerPool from "workerpool";
 import {
+  IS_REMOTE_CRAWLER,
   POWER_LEVEL,
   POWER_LEVEL_LIST,
   SERVER_LESS,
@@ -34,6 +35,7 @@ export const deleteUserDataDir = async (dir: string) => {
         )
       )?.exec("deleteResource", [dir]);
     } catch (err) {
+      Console.log("BrowserManager line 39:");
       Console.error(err);
     }
   }
@@ -60,8 +62,12 @@ const BrowserManager = (
   const __launch = async () => {
     totalRequests = 0;
 
-    const selfUserDataDirPath = reserveUserDataDirPath || userDataDir();
-    reserveUserDataDirPath = `${userDataDir()}_reserve`;
+    const selfUserDataDirPath =
+      reserveUserDataDirPath ||
+      `${userDataDir()}${IS_REMOTE_CRAWLER ? "_remote" : ""}`;
+    reserveUserDataDirPath = `${userDataDir()}_reserve${
+      IS_REMOTE_CRAWLER ? "_remote" : ""
+    }`;
 
     browserLaunch = new Promise(async (res, rej) => {
       let isError = false;
@@ -108,7 +114,13 @@ const BrowserManager = (
               args: Chromium.args,
               executablePath,
             });
-            reserveBrowser.close();
+            try {
+              reserveBrowser.close();
+            } catch (err) {
+              Console.log("BrowserManager line 121");
+              Console.error(err);
+            }
+
             res(null);
           });
         } else {
@@ -124,7 +136,12 @@ const BrowserManager = (
               ...defaultBrowserOptions,
               userDataDir: reserveUserDataDirPath,
             });
-            reserveBrowser.close();
+            try {
+              reserveBrowser.close();
+            } catch (err) {
+              Console.log("BrowserManager line 143");
+              Console.error(err);
+            }
             res(null);
           });
         }
@@ -150,9 +167,15 @@ const BrowserManager = (
               const tmpPage = safePage();
               if (!tmpPage) resolveCloseTab(null);
               else if (!tmpPage.isClosed()) {
-                tmpPage.close();
+                try {
+                  tmpPage.close();
+                } catch (err) {
+                  Console.log("BrowserManager line 164");
+                  Console.error(err);
+                }
               }
             }, 180000);
+
             safePage()?.once("close", () => {
               clearTimeout(timeoutCloseTab);
               resolveCloseTab(null);
@@ -162,11 +185,19 @@ const BrowserManager = (
           tabsClosed++;
 
           if (!SERVER_LESS && tabsClosed === maxRequestPerBrowser) {
-            setTimeout(() => browser.close(), 250);
+            if (browser.connected)
+              try {
+                browser.close();
+              } catch (err) {
+                Console.log("BrowserManager line 193");
+                Console.error(err);
+              }
+
             deleteUserDataDir(selfUserDataDirPath);
           }
         }) as any);
       } catch (err) {
+        Console.log("Browser manager line 177:");
         Console.error(err);
       }
     }
@@ -184,8 +215,8 @@ const BrowserManager = (
     totalRequests++;
     const curBrowserLaunch = browserLaunch;
 
-    const pages = (await (await curBrowserLaunch)?.pages())?.length ?? 0;
-    await new Promise((res) => setTimeout(res, pages * 20));
+    // const pages = (await (await curBrowserLaunch)?.pages())?.length ?? 0;
+    // await new Promise((res) => setTimeout(res, pages * 10));
 
     return curBrowserLaunch as Promise<Browser>;
   }; // _get

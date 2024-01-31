@@ -5,21 +5,21 @@ var _ConsoleHandler = require('../../../utils/ConsoleHandler'); var _ConsoleHand
 
 
  const deleteResource = (path, WorkerPool) => {
-	if (!path || !_fsextra2.default.existsSync(path)) return _ConsoleHandler2.default.log('Path can not empty!')
+  if (!path || !_fsextra2.default.existsSync(path)) return _ConsoleHandler2.default.log("Path can not empty!");
 
-	_fsextra2.default.emptyDirSync(path)
-	_fsextra2.default.remove(path)
-		.then(() => {
-			if (WorkerPool) {
-				WorkerPool.pool().terminate()
-			}
-		})
-		.catch((err) => {
-			if (err) {
-				console.error(err)
-				if (WorkerPool) {
-					WorkerPool.pool().terminate()
-				}
-			}
-		})
-}; exports.deleteResource = deleteResource
+  _fsextra2.default.emptyDirSync(path);
+  _fsextra2.default.remove(path)
+    .then(() => {
+      if (WorkerPool) {
+        WorkerPool.pool().terminate();
+      }
+    })
+    .catch((err) => {
+      if (err) {
+        _ConsoleHandler2.default.error(err);
+        if (WorkerPool) {
+          WorkerPool.pool().terminate();
+        }
+      }
+    });
+}; exports.deleteResource = deleteResource;

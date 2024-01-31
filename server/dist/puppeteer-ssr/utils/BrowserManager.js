@@ -1,7 +1,8 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } async function _asyncNullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return await rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } async function _asyncOptionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = await fn(value); } else if (op === 'call' || op === 'optionalCall') { value = await fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _chromiummin = require('@sparticuz/chromium-min'); var _chromiummin2 = _interopRequireDefault(_chromiummin);
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _chromiummin = require('@sparticuz/chromium-min'); var _chromiummin2 = _interopRequireDefault(_chromiummin);
 var _path = require('path'); var _path2 = _interopRequireDefault(_path);
 
 var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
+
 
 
 
@@ -34,6 +35,7 @@ var _constants3 = require('../constants');
         )
       ), 'optionalAccess', _3 => _3.exec, 'call', _4 => _4("deleteResource", [dir])]);
     } catch (err) {
+      _ConsoleHandler2.default.log("BrowserManager line 39:");
       _ConsoleHandler2.default.error(err);
     }
   }
@@ -60,8 +62,12 @@ const BrowserManager = (
   const __launch = async () => {
     totalRequests = 0;
 
-    const selfUserDataDirPath = reserveUserDataDirPath || userDataDir();
-    reserveUserDataDirPath = `${userDataDir()}_reserve`;
+    const selfUserDataDirPath =
+      reserveUserDataDirPath ||
+      `${userDataDir()}${_constants.IS_REMOTE_CRAWLER ? "_remote" : ""}`;
+    reserveUserDataDirPath = `${userDataDir()}_reserve${
+      _constants.IS_REMOTE_CRAWLER ? "_remote" : ""
+    }`;
 
     browserLaunch = new Promise(async (res, rej) => {
       let isError = false;
@@ -108,7 +114,13 @@ const BrowserManager = (
               args: _chromiummin2.default.args,
               executablePath,
             });
-            reserveBrowser.close();
+            try {
+              reserveBrowser.close();
+            } catch (err) {
+              _ConsoleHandler2.default.log("BrowserManager line 121");
+              _ConsoleHandler2.default.error(err);
+            }
+
             res(null);
           });
         } else {
@@ -124,7 +136,12 @@ const BrowserManager = (
               ..._constants3.defaultBrowserOptions,
               userDataDir: reserveUserDataDirPath,
             });
-            reserveBrowser.close();
+            try {
+              reserveBrowser.close();
+            } catch (err) {
+              _ConsoleHandler2.default.log("BrowserManager line 143");
+              _ConsoleHandler2.default.error(err);
+            }
             res(null);
           });
         }
@@ -150,9 +167,15 @@ const BrowserManager = (
               const tmpPage = safePage();
               if (!tmpPage) resolveCloseTab(null);
               else if (!tmpPage.isClosed()) {
-                tmpPage.close();
+                try {
+                  tmpPage.close();
+                } catch (err) {
+                  _ConsoleHandler2.default.log("BrowserManager line 164");
+                  _ConsoleHandler2.default.error(err);
+                }
               }
             }, 180000);
+
             _optionalChain([safePage, 'call', _5 => _5(), 'optionalAccess', _6 => _6.once, 'call', _7 => _7("close", () => {
               clearTimeout(timeoutCloseTab);
               resolveCloseTab(null);
@@ -162,11 +185,19 @@ const BrowserManager = (
           tabsClosed++;
 
           if (!_constants.SERVER_LESS && tabsClosed === maxRequestPerBrowser) {
-            setTimeout(() => browser.close(), 250);
+            if (browser.connected)
+              try {
+                browser.close();
+              } catch (err) {
+                _ConsoleHandler2.default.log("BrowserManager line 193");
+                _ConsoleHandler2.default.error(err);
+              }
+
             exports.deleteUserDataDir.call(void 0, selfUserDataDirPath);
           }
         }) );
       } catch (err) {
+        _ConsoleHandler2.default.log("Browser manager line 177:");
         _ConsoleHandler2.default.error(err);
       }
     }
@@ -184,8 +215,8 @@ const BrowserManager = (
     totalRequests++;
     const curBrowserLaunch = browserLaunch;
 
-    const pages = await _asyncNullishCoalesce(await _asyncOptionalChain([(await await _asyncOptionalChain([(await curBrowserLaunch), 'optionalAccess', async _8 => _8.pages, 'call', async _9 => _9()])), 'optionalAccess', async _10 => _10.length]), async () => ( 0));
-    await new Promise((res) => setTimeout(res, pages * 20));
+    // const pages = (await (await curBrowserLaunch)?.pages())?.length ?? 0;
+    // await new Promise((res) => setTimeout(res, pages * 10));
 
     return curBrowserLaunch ;
   }; // _get
@@ -195,7 +226,7 @@ const BrowserManager = (
     let page;
     try {
       browser = await _get();
-      page = await _optionalChain([browser, 'optionalAccess', _11 => _11.newPage, 'optionalCall', _12 => _12()]);
+      page = await _optionalChain([browser, 'optionalAccess', _8 => _8.newPage, 'optionalCall', _9 => _9()]);
 
       if (!page) {
         __launch();

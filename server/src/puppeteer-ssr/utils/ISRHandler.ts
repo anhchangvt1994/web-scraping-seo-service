@@ -98,7 +98,7 @@ const waitResponse = (() => {
   const requestFailDuration =
     BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250;
   const maximumTimeout =
-    BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 5000 : 5000;
+    BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 120000 : 120000;
 
   return async (page: Page, url: string, duration: number) => {
     const safePage = _getSafePage(page);
@@ -109,6 +109,7 @@ const waitResponse = (() => {
           page
             .goto(url.split("?")[0], {
               waitUntil: "domcontentloaded",
+              timeout: 80000,
             })
             .then((res) => {
               setTimeout(() => resolveAfterPageLoad(res), firstWaitingDuration);
@@ -151,6 +152,7 @@ const waitResponse = (() => {
         }, 100);
       });
     } catch (err) {
+      Console.log("ISRHandler line 156:");
       throw err;
     }
 
@@ -224,6 +226,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
       }
       Console.log("External crawler status: ", status);
     } catch (err) {
+      Console.log("ISRHandler line 230:");
       Console.log("Crawler is fail!");
       Console.error(err);
     }
@@ -249,6 +252,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 
     try {
       // await safePage()?.waitForNetworkIdle({ idleTime: 150 })
+      safePage()?.setDefaultNavigationTimeout(0);
       await safePage()?.setRequestInterception(true);
       safePage()?.on("request", (req) => {
         const resourceType = req.resourceType();
@@ -280,9 +284,10 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
         } catch (err) {
           if (err.name !== "TimeoutError") {
             isGetHtmlProcessError = true;
-            res(false);
+            Console.log("ISRHandler line 285:");
+            Console.error(err);
             await safePage()?.close();
-            return Console.error(err);
+            return res(false);
           }
         } finally {
           status = response?.status?.() ?? status;
@@ -292,6 +297,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
         }
       });
     } catch (err) {
+      Console.log("ISRHandler line 297:");
       Console.log("Crawler is fail!");
       Console.error(err);
       await safePage()?.close();
@@ -309,6 +315,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
       html = (await safePage()?.content()) ?? ""; // serialized HTML of page DOM.
       await safePage()?.close();
     } catch (err) {
+      Console.log("ISRHandler line 315:");
       Console.error(err);
       return;
     }
