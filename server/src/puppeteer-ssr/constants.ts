@@ -51,6 +51,7 @@ export const optionArgs = [
   "--use-mock-keychain",
   // '--use-gl=angle',
   // '--use-angle=gl-egl',
+  // "--shm-size=4gb",
 ];
 
 export const defaultBrowserOptions: PuppeteerLaunchOptions = {

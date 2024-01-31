@@ -51,6 +51,7 @@ var _InitEnv = require('../utils/InitEnv');
   "--use-mock-keychain",
   // '--use-gl=angle',
   // '--use-angle=gl-egl',
+  // "--shm-size=4gb",
 ]; exports.optionArgs = optionArgs;
 
  const defaultBrowserOptions = {

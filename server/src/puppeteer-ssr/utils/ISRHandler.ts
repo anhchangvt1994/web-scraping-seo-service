@@ -101,15 +101,24 @@ const waitResponse = (() => {
     BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 120000 : 120000;
 
   return async (page: Page, url: string, duration: number) => {
+    let hasRedirected = false;
     const safePage = _getSafePage(page);
+    safePage()?.on("response", (response) => {
+      const status = response.status();
+      //[301, 302, 303, 307, 308]
+      if (status >= 300 && status <= 399) {
+        hasRedirected = true;
+      }
+    });
+
     let response;
     try {
       response = await new Promise(async (resolve, reject) => {
-        const result = await new Promise<any>((resolveAfterPageLoad) => {
-          page
-            .goto(url.split("?")[0], {
-              waitUntil: "domcontentloaded",
-              timeout: 80000,
+        let result = await new Promise<any>((resolveAfterPageLoad) => {
+          safePage()
+            ?.goto(url.split("?")[0], {
+              waitUntil: "networkidle2",
+              timeout: 0,
             })
             .then((res) => {
               setTimeout(() => resolveAfterPageLoad(res), firstWaitingDuration);
@@ -118,6 +127,11 @@ const waitResponse = (() => {
               reject(err);
             });
         });
+
+        if (hasRedirected)
+          result = await safePage()?.waitForNavigation({
+            waitUntil: "domcontentloaded",
+          });
 
         const html = (await safePage()?.content()) ?? "";
 
@@ -252,7 +266,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 
     try {
       // await safePage()?.waitForNetworkIdle({ idleTime: 150 })
-      safePage()?.setDefaultNavigationTimeout(0);
+      // safePage()?.setDefaultNavigationTimeout(0);
       await safePage()?.setRequestInterception(true);
       safePage()?.on("request", (req) => {
         const resourceType = req.resourceType();

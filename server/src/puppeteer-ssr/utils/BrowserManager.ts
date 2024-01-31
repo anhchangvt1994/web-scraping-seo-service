@@ -115,7 +115,7 @@ const BrowserManager = (
               executablePath,
             });
             try {
-              reserveBrowser.close();
+              await reserveBrowser.close();
             } catch (err) {
               Console.log("BrowserManager line 121");
               Console.error(err);
@@ -137,7 +137,7 @@ const BrowserManager = (
               userDataDir: reserveUserDataDirPath,
             });
             try {
-              reserveBrowser.close();
+              await reserveBrowser.close();
             } catch (err) {
               Console.log("BrowserManager line 143");
               Console.error(err);
@@ -163,12 +163,12 @@ const BrowserManager = (
         browser.on("createNewPage", (async (page: Page) => {
           const safePage = _getSafePage(page);
           await new Promise((resolveCloseTab) => {
-            const timeoutCloseTab = setTimeout(() => {
+            const timeoutCloseTab = setTimeout(async () => {
               const tmpPage = safePage();
               if (!tmpPage) resolveCloseTab(null);
-              else if (!tmpPage.isClosed()) {
+              else if (browser.connected && !tmpPage.isClosed()) {
                 try {
-                  tmpPage.close();
+                  await tmpPage.close();
                 } catch (err) {
                   Console.log("BrowserManager line 164");
                   Console.error(err);
@@ -187,7 +187,7 @@ const BrowserManager = (
           if (!SERVER_LESS && tabsClosed === maxRequestPerBrowser) {
             if (browser.connected)
               try {
-                browser.close();
+                await browser.close();
               } catch (err) {
                 Console.log("BrowserManager line 193");
                 Console.error(err);
@@ -242,7 +242,7 @@ const BrowserManager = (
   }; // _newPage
 
   const _isReady = () => {
-    return totalRequests <= maxRequestPerBrowser;
+    return totalRequests < maxRequestPerBrowser;
   }; // _isReady
 
   return {

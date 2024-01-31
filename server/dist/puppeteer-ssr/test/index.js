@@ -3,7 +3,7 @@ var _constants = require('./constants');
 var _constants3 = require('../../constants');
 
 const minWorkers = 1;
-const maxWorkers = 20;
+const maxWorkers = 10;
 
 const testPuppeteerSSRService = (() => {
   const _init = () => {
@@ -15,7 +15,7 @@ const testPuppeteerSSRService = (() => {
       }
     );
 
-    const domain = "http://localhost:8080";
+    const domain = "http://localhost:8081";
     console.log("total urls: ", _constants.urlList.length);
     console.log("max workers: ", maxWorkers);
     console.log("========================>");
