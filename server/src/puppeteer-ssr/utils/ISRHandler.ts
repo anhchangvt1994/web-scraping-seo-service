@@ -98,7 +98,7 @@ const waitResponse = (() => {
   const requestFailDuration =
     BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250;
   const maximumTimeout =
-    BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 120000 : 120000;
+    BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 60000 : 60000;
 
   return async (page: Page, url: string, duration: number) => {
     let hasRedirected = false;
@@ -114,7 +114,7 @@ const waitResponse = (() => {
     let response;
     try {
       response = await new Promise(async (resolve, reject) => {
-        let result = await new Promise<any>((resolveAfterPageLoad) => {
+        const result = await new Promise<any>((resolveAfterPageLoad) => {
           safePage()
             ?.goto(url.split("?")[0], {
               waitUntil: "networkidle2",
@@ -128,10 +128,19 @@ const waitResponse = (() => {
             });
         });
 
-        if (hasRedirected)
-          result = await safePage()?.waitForNavigation({
-            waitUntil: "domcontentloaded",
-          });
+        console.log(safePage()?.url());
+
+        const waitForNavigate = async () => {
+          if (hasRedirected) {
+            hasRedirected = false;
+            await safePage()?.waitForSelector("body");
+            await waitForNavigate();
+          }
+        };
+
+        await waitForNavigate();
+
+        safePage()?.removeAllListeners("response");
 
         const html = (await safePage()?.content()) ?? "";
 
