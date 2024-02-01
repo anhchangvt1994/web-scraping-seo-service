@@ -117,7 +117,7 @@ const waitResponse = (() => {
         const result = await new Promise<any>((resolveAfterPageLoad) => {
           safePage()
             ?.goto(url.split("?")[0], {
-              waitUntil: "networkidle2",
+              waitUntil: "domcontentloaded",
               timeout: 0,
             })
             .then((res) => {
@@ -127,8 +127,6 @@ const waitResponse = (() => {
               reject(err);
             });
         });
-
-        console.log(safePage()?.url());
 
         const waitForNavigate = async () => {
           if (hasRedirected) {

@@ -117,7 +117,7 @@ const waitResponse = (() => {
         const result = await new Promise((resolveAfterPageLoad) => {
           _optionalChain([safePage, 'call', _4 => _4()
 , 'optionalAccess', _5 => _5.goto, 'call', _6 => _6(url.split("?")[0], {
-              waitUntil: "networkidle2",
+              waitUntil: "domcontentloaded",
               timeout: 0,
             })
 , 'access', _7 => _7.then, 'call', _8 => _8((res) => {
@@ -128,21 +128,21 @@ const waitResponse = (() => {
             })]);
         });
 
-        console.log(_optionalChain([safePage, 'call', _11 => _11(), 'optionalAccess', _12 => _12.url, 'call', _13 => _13()]));
+        console.log(hasRedirected);
 
         const waitForNavigate = async () => {
           if (hasRedirected) {
             hasRedirected = false;
-            await _optionalChain([safePage, 'call', _14 => _14(), 'optionalAccess', _15 => _15.waitForSelector, 'call', _16 => _16("body")]);
+            await _optionalChain([safePage, 'call', _11 => _11(), 'optionalAccess', _12 => _12.waitForSelector, 'call', _13 => _13("body")]);
             await waitForNavigate();
           }
         };
 
         await waitForNavigate();
 
-        _optionalChain([safePage, 'call', _17 => _17(), 'optionalAccess', _18 => _18.removeAllListeners, 'call', _19 => _19("response")]);
+        _optionalChain([safePage, 'call', _14 => _14(), 'optionalAccess', _15 => _15.removeAllListeners, 'call', _16 => _16("response")]);
 
-        const html = await _asyncNullishCoalesce((await _optionalChain([safePage, 'call', _20 => _20(), 'optionalAccess', _21 => _21.content, 'call', _22 => _22()])), async () => ( ""));
+        const html = await _asyncNullishCoalesce((await _optionalChain([safePage, 'call', _17 => _17(), 'optionalAccess', _18 => _18.content, 'call', _19 => _19()])), async () => ( ""));
 
         if (_constants3.regexNotFoundPageID.test(html)) return resolve(result);
 
@@ -157,13 +157,13 @@ const waitResponse = (() => {
 
           startTimeout();
 
-          _optionalChain([safePage, 'call', _23 => _23(), 'optionalAccess', _24 => _24.on, 'call', _25 => _25("requestfinished", () => {
+          _optionalChain([safePage, 'call', _20 => _20(), 'optionalAccess', _21 => _21.on, 'call', _22 => _22("requestfinished", () => {
             startTimeout();
           })]);
-          _optionalChain([safePage, 'call', _26 => _26(), 'optionalAccess', _27 => _27.on, 'call', _28 => _28("requestservedfromcache", () => {
+          _optionalChain([safePage, 'call', _23 => _23(), 'optionalAccess', _24 => _24.on, 'call', _25 => _25("requestservedfromcache", () => {
             startTimeout(requestServedFromCacheDuration);
           })]);
-          _optionalChain([safePage, 'call', _29 => _29(), 'optionalAccess', _30 => _30.on, 'call', _31 => _31("requestfailed", () => {
+          _optionalChain([safePage, 'call', _26 => _26(), 'optionalAccess', _27 => _27.on, 'call', _28 => _28("requestfailed", () => {
             startTimeout(requestFailDuration);
           })]);
 
@@ -205,7 +205,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
   let html = "";
   let isForceToOptimizeAndCompress = false;
   let status = 200;
-  const specialInfo = _nullishCoalesce(_optionalChain([_constants3.regexQueryStringSpecialInfo, 'access', _32 => _32.exec, 'call', _33 => _33(url), 'optionalAccess', _34 => _34.groups]), () => ( {}));
+  const specialInfo = _nullishCoalesce(_optionalChain([_constants3.regexQueryStringSpecialInfo, 'access', _29 => _29.exec, 'call', _30 => _30(url), 'optionalAccess', _31 => _31.groups]), () => ( {}));
 
   if (_serverconfig2.default.crawler) {
     isForceToOptimizeAndCompress = true;
@@ -276,8 +276,8 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
     try {
       // await safePage()?.waitForNetworkIdle({ idleTime: 150 })
       // safePage()?.setDefaultNavigationTimeout(0);
-      await _optionalChain([safePage, 'call', _35 => _35(), 'optionalAccess', _36 => _36.setRequestInterception, 'call', _37 => _37(true)]);
-      _optionalChain([safePage, 'call', _38 => _38(), 'optionalAccess', _39 => _39.on, 'call', _40 => _40("request", (req) => {
+      await _optionalChain([safePage, 'call', _32 => _32(), 'optionalAccess', _33 => _33.setRequestInterception, 'call', _34 => _34(true)]);
+      _optionalChain([safePage, 'call', _35 => _35(), 'optionalAccess', _36 => _36.on, 'call', _37 => _37("request", (req) => {
         const resourceType = req.resourceType();
 
         if (resourceType === "stylesheet") {
@@ -292,7 +292,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
         }
       })]);
 
-      await _optionalChain([safePage, 'call', _41 => _41(), 'optionalAccess', _42 => _42.setExtraHTTPHeaders, 'call', _43 => _43({
+      await _optionalChain([safePage, 'call', _38 => _38(), 'optionalAccess', _39 => _39.setExtraHTTPHeaders, 'call', _40 => _40({
         ...specialInfo,
         service: "puppeteer",
       })]);
@@ -309,11 +309,11 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
             isGetHtmlProcessError = true;
             _ConsoleHandler2.default.log("ISRHandler line 285:");
             _ConsoleHandler2.default.error(err);
-            await _optionalChain([safePage, 'call', _44 => _44(), 'optionalAccess', _45 => _45.close, 'call', _46 => _46()]);
+            await _optionalChain([safePage, 'call', _41 => _41(), 'optionalAccess', _42 => _42.close, 'call', _43 => _43()]);
             return res(false);
           }
         } finally {
-          status = _nullishCoalesce(_optionalChain([response, 'optionalAccess', _47 => _47.status, 'optionalCall', _48 => _48()]), () => ( status));
+          status = _nullishCoalesce(_optionalChain([response, 'optionalAccess', _44 => _44.status, 'optionalCall', _45 => _45()]), () => ( status));
           _ConsoleHandler2.default.log(`Internal crawler status: ${status}`);
 
           res(true);
@@ -323,7 +323,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
       _ConsoleHandler2.default.log("ISRHandler line 297:");
       _ConsoleHandler2.default.log("Crawler is fail!");
       _ConsoleHandler2.default.error(err);
-      await _optionalChain([safePage, 'call', _49 => _49(), 'optionalAccess', _50 => _50.close, 'call', _51 => _51()]);
+      await _optionalChain([safePage, 'call', _46 => _46(), 'optionalAccess', _47 => _47.close, 'call', _48 => _48()]);
       return {
         status: 500,
       };
@@ -335,8 +335,8 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
       };
 
     try {
-      html = await _asyncNullishCoalesce((await _optionalChain([safePage, 'call', _52 => _52(), 'optionalAccess', _53 => _53.content, 'call', _54 => _54()])), async () => ( "")); // serialized HTML of page DOM.
-      await _optionalChain([safePage, 'call', _55 => _55(), 'optionalAccess', _56 => _56.close, 'call', _57 => _57()]);
+      html = await _asyncNullishCoalesce((await _optionalChain([safePage, 'call', _49 => _49(), 'optionalAccess', _50 => _50.content, 'call', _51 => _51()])), async () => ( "")); // serialized HTML of page DOM.
+      await _optionalChain([safePage, 'call', _52 => _52(), 'optionalAccess', _53 => _53.close, 'call', _54 => _54()]);
     } catch (err) {
       _ConsoleHandler2.default.log("ISRHandler line 315:");
       _ConsoleHandler2.default.error(err);
