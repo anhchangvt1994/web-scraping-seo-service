@@ -4,6 +4,7 @@ var _InitEnv = require('../utils/InitEnv');
 
 // NOTE - Browser Options
  const optionArgs = [
+  "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
   "--no-sandbox",
   "--disable-setuid-sandbox",
   "--headless",
@@ -62,6 +63,7 @@ var _InitEnv = require('../utils/InitEnv');
   },
   userDataDir: `${_constants.userDataPath}/user_data`,
   args: exports.optionArgs,
+  protocolTimeout: 240000, // NOTE - Handle for error protocol timeout (can test adidas site to got detail of this issue)
   ignoreDefaultArgs: false,
   ignoreHTTPSErrors: true,
 }; exports.defaultBrowserOptions = defaultBrowserOptions;

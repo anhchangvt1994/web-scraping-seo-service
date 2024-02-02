@@ -4,6 +4,7 @@ import { PROCESS_ENV } from "../utils/InitEnv";
 
 // NOTE - Browser Options
 export const optionArgs = [
+  "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
   "--no-sandbox",
   "--disable-setuid-sandbox",
   "--headless",
@@ -62,6 +63,7 @@ export const defaultBrowserOptions: PuppeteerLaunchOptions = {
   },
   userDataDir: `${userDataPath}/user_data`,
   args: optionArgs,
+  protocolTimeout: 240000, // NOTE - Handle for error protocol timeout (can test adidas site to got detail of this issue)
   ignoreDefaultArgs: false,
   ignoreHTTPSErrors: true,
 };

@@ -15,7 +15,7 @@ const testPuppeteerSSRService = (() => {
       }
     );
 
-    const domain = "http://localhost:8081";
+    const domain = "http://localhost:8080";
     console.log("total urls: ", urlList.length);
     console.log("max workers: ", maxWorkers);
     console.log("========================>");

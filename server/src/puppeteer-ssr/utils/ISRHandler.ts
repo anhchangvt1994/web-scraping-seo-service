@@ -181,6 +181,43 @@ const waitResponse = (() => {
   };
 })(); // waitResponse
 
+const optimizingQueue = (() => {
+  const max = 3;
+  let total = 0;
+  const queue = new Map();
+  const queueKeys = queue.keys();
+  let curValidKey = queueKeys.next().value;
+
+  const queueHandler = async (id) => {
+    if (total < max) {
+      total++;
+      queue.set(id, queue.get(id)());
+
+      return queue.get(id).then(() => {
+        total--;
+        queue.delete(id);
+      });
+    }
+
+    if (!queue.has(curValidKey)) curValidKey = queueKeys.next().value;
+
+    await queue.get(curValidKey);
+
+    return queueHandler(id);
+  };
+
+  return async ({
+    id,
+    exec,
+  }: {
+    id: string;
+    exec: () => Promise<ISSRResult>;
+  }) => {
+    queue.set(id, exec);
+    return await queueHandler(id);
+  };
+})(); // optimizingQueue
+
 const gapDurationDefault = 1500;
 
 const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
@@ -346,41 +383,48 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 
   restOfDuration = _getRestOfDuration(startGenerating);
 
-  let result: ISSRResult;
-  if (CACHEABLE_STATUS_CODE[status]) {
-    const optimizeHTMLContentPool = WorkerPool.pool(
-      __dirname + `/OptimizeHtml.worker.${resourceExtension}`,
-      {
-        minWorkers: 2,
-        maxWorkers: MAX_WORKERS,
+  const result: ISSRResult = await optimizingQueue({
+    id: url,
+    exec: async () => {
+      let tmpResult: ISSRResult;
+      if (CACHEABLE_STATUS_CODE[status]) {
+        const optimizeHTMLContentPool = WorkerPool.pool(
+          __dirname + `/OptimizeHtml.worker.${resourceExtension}`,
+          {
+            minWorkers: 2,
+            maxWorkers: MAX_WORKERS,
+          }
+        );
+
+        try {
+          html = await optimizeHTMLContentPool.exec("optimizeContent", [
+            html,
+            true,
+            isForceToOptimizeAndCompress,
+          ]);
+        } catch (err) {
+          Console.error(err);
+          return;
+        } finally {
+          optimizeHTMLContentPool.terminate();
+        }
+
+        tmpResult = await cacheManager.set({
+          html,
+          url,
+          isRaw: true,
+        });
+      } else {
+        await cacheManager.remove(url);
+        return {
+          status,
+          html: status === 404 ? "Page not found!" : html,
+        };
       }
-    );
 
-    try {
-      html = await optimizeHTMLContentPool.exec("optimizeContent", [
-        html,
-        true,
-        isForceToOptimizeAndCompress,
-      ]);
-    } catch (err) {
-      Console.error(err);
-      return;
-    } finally {
-      optimizeHTMLContentPool.terminate();
-    }
-
-    result = await cacheManager.set({
-      html,
-      url,
-      isRaw: true,
-    });
-  } else {
-    await cacheManager.remove(url);
-    return {
-      status,
-      html: status === 404 ? "Page not found!" : html,
-    };
-  }
+      return tmpResult;
+    },
+  });
 
   return result;
 };
