@@ -181,43 +181,6 @@ const waitResponse = (() => {
   };
 })(); // waitResponse
 
-const optimizingQueue = (() => {
-  const max = 3;
-  let total = 0;
-  const queue = new Map();
-  const queueKeys = queue.keys();
-  let curValidKey = queueKeys.next().value;
-
-  const queueHandler = async (id) => {
-    if (total < max) {
-      total++;
-      queue.set(id, queue.get(id)());
-
-      return queue.get(id).then(() => {
-        total--;
-        queue.delete(id);
-      });
-    }
-
-    if (!queue.has(curValidKey)) curValidKey = queueKeys.next().value;
-
-    await queue.get(curValidKey);
-
-    return queueHandler(id);
-  };
-
-  return async ({
-    id,
-    exec,
-  }
-
-
-) => {
-    queue.set(id, exec);
-    return await queueHandler(id);
-  };
-})(); // optimizingQueue
-
 const gapDurationDefault = 1500;
 
 const ISRHandler = async ({ isFirstRequest, url }) => {
@@ -383,48 +346,43 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 
   restOfDuration = _getRestOfDuration(startGenerating);
 
-  const result = await optimizingQueue({
-    id: url,
-    exec: async () => {
-      let tmpResult;
-      if (_constants3.CACHEABLE_STATUS_CODE[status]) {
-        const optimizeHTMLContentPool = _workerpool2.default.pool(
-          __dirname + `/OptimizeHtml.worker.${_constants.resourceExtension}`,
-          {
-            minWorkers: 2,
-            maxWorkers: _constants3.MAX_WORKERS,
-          }
-        );
-
-        try {
-          html = await optimizeHTMLContentPool.exec("optimizeContent", [
-            html,
-            true,
-            isForceToOptimizeAndCompress,
-          ]);
-        } catch (err) {
-          _ConsoleHandler2.default.error(err);
-          return;
-        } finally {
-          optimizeHTMLContentPool.terminate();
-        }
-
-        tmpResult = await cacheManager.set({
-          html,
-          url,
-          isRaw: true,
-        });
-      } else {
-        await cacheManager.remove(url);
-        return {
-          status,
-          html: status === 404 ? "Page not found!" : html,
-        };
+  let result;
+  if (_constants3.CACHEABLE_STATUS_CODE[status]) {
+    const optimizeHTMLContentPool = _workerpool2.default.pool(
+      __dirname + `/OptimizeHtml.worker.${_constants.resourceExtension}`,
+      {
+        minWorkers: 2,
+        maxWorkers: _constants3.MAX_WORKERS,
       }
+    );
 
-      return tmpResult;
-    },
-  });
+    try {
+      html = await optimizeHTMLContentPool.exec("optimizeContent", [
+        html,
+        true,
+        isForceToOptimizeAndCompress,
+      ]);
+    } catch (err) {
+      _ConsoleHandler2.default.log("--------------------");
+      _ConsoleHandler2.default.log("ISRHandler line 368:");
+      _ConsoleHandler2.default.log("error url", url.split("?")[0]);
+      _ConsoleHandler2.default.error(err);
+    } finally {
+      optimizeHTMLContentPool.terminate();
+    }
+
+    result = await cacheManager.set({
+      html,
+      url,
+      isRaw: true,
+    });
+  } else {
+    await cacheManager.remove(url);
+    return {
+      status,
+      html: status === 404 ? "Page not found!" : html,
+    };
+  }
 
   return result;
 };
