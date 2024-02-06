@@ -16,7 +16,7 @@
     "pm2-puppeteer-ssr:uws": "node --require sucrase/register server/src/puppeteer-ssr/pm2.uws.ts",
     "server-build": "npx sucrase --quiet ./server/src -d ./server/dist --transforms typescript,imports",
     "pre-commit": "npm run server-build && git add ./server/dist",
-    "prepare": "git config core.autocrlf false",
+    "prepare": "git config core.autocrlf false && npx husky install",
     "preinstall": "node server/src/utils/GenerateServerInfo.js && node server/src/puppeteer-ssr/utils/CreatePuppeteerConfigFile.js"
   },
   "engines": {
@@ -31,6 +31,7 @@
     "sucrase": "^3.35.0"
   },
   "devDependencies": {
-    "server": "file:./server"
+    "server": "file:./server",
+    "commit-packages": "file:./config/commit-packages"
   }
 }
