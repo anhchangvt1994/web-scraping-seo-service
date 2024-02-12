@@ -1,16 +1,6 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true});var _geoiplite = require('geoip-lite');
-
-
-
-
-
-
-
-
-
-
-
-
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+var _geoiplite = require('geoip-lite')
 
 const IP_INFO_DEFAULT = {
 	range: [1984292864, 1984294911],
@@ -24,7 +14,7 @@ const IP_INFO_DEFAULT = {
 	area: 50,
 }
 
- function generateIPInfo(req) {
+function generateIPInfo(req) {
 	if (!req || !req.headers || !req.connection) return IP_INFO_DEFAULT
 
 	const clientIp = (
@@ -37,4 +27,5 @@ const IP_INFO_DEFAULT = {
 
 	const ipInfo = _geoiplite.lookup.call(void 0, clientIp) || IP_INFO_DEFAULT
 	return ipInfo
-} exports.default = generateIPInfo; // generateIPInfo
+}
+exports.default = generateIPInfo // generateIPInfo

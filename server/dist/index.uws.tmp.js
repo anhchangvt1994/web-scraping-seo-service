@@ -1,4 +1,4 @@
-"use strict";/* Non-SSL is simply App() */
+'use strict' /* Non-SSL is simply App() */
 const port = 9001
 
 require('uWebSockets.js')

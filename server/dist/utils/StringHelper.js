@@ -1,4 +1,5 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true});// DOCS: https://github.com/kvz/locutus/blob/master/src/php/strings/str_replace.js
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true }) // DOCS: https://github.com/kvz/locutus/blob/master/src/php/strings/str_replace.js
 function str_replace(search, replace, subject, countObj) {
 	// eslint-disable-line camelcase
 	//  discuss at: https://locutus.io/php/str_replace/
@@ -449,12 +450,10 @@ const getLocale = (lang, country) => {
 	return arrLocale.join('-')
 } // getLocale
 
-
-
-
-
-
-
-
-
-exports.getSlug = getSlug; exports.getSlugWithoutDash = getSlugWithoutDash; exports.getUnsignedLetters = getUnsignedLetters; exports.getCustomSlug = getCustomSlug; exports.generateTitleCase = generateTitleCase; exports.generateSentenceCase = generateSentenceCase; exports.getLocale = getLocale;
+exports.getSlug = getSlug
+exports.getSlugWithoutDash = getSlugWithoutDash
+exports.getUnsignedLetters = getUnsignedLetters
+exports.getCustomSlug = getCustomSlug
+exports.generateTitleCase = generateTitleCase
+exports.generateSentenceCase = generateSentenceCase
+exports.getLocale = getLocale

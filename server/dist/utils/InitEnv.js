@@ -1,19 +1,23 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _path = require('path'); var _path2 = _interopRequireDefault(_path);
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
 
 const dotenv = require('dotenv')
 
- const ENV = (
-	['development', 'production'].includes(process.env.ENV )
-		? process.env.ENV
-		: 'production'
-) ; exports.ENV = ENV
- const MODE = (
-	['development', 'preview', 'production'].includes(process.env.MODE )
-		? process.env.MODE
-		: process.env.ENV === 'development'
-		? 'development'
-		: 'production'
-) ; exports.MODE = MODE
+const ENV = ['development', 'production'].includes(process.env.ENV)
+	? process.env.ENV
+	: 'production'
+exports.ENV = ENV
+const MODE = ['development', 'preview', 'production'].includes(process.env.MODE)
+	? process.env.MODE
+	: process.env.ENV === 'development'
+	? 'development'
+	: 'production'
+exports.MODE = MODE
 
 const envModeList = {
 	// NOTE - This means you can debug staging and production in development environment
@@ -26,21 +30,11 @@ const envModeList = {
 	production_preview: 'uat',
 	production_production: 'production',
 }
- const ENV_MODE = envModeList[`${exports.ENV}_${exports.MODE}`] 
+const ENV_MODE = envModeList[`${exports.ENV}_${exports.MODE}`]
 
+exports.ENV_MODE = ENV_MODE
 
-
-
-
-
-
-
-
-
-
-; exports.ENV_MODE = ENV_MODE
-
- const PROCESS_ENV = (() => {
+const PROCESS_ENV = (() => {
 	dotenv.config({
 		path: _path2.default.resolve(__dirname, '../../.env'),
 	})
@@ -68,5 +62,6 @@ const envModeList = {
 			break
 	}
 
-	return process.env 
-})(); exports.PROCESS_ENV = PROCESS_ENV
+	return process.env
+})()
+exports.PROCESS_ENV = PROCESS_ENV

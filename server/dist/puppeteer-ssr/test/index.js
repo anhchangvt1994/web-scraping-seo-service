@@ -1,6 +1,12 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
-var _constants = require('./constants');
-var _constants3 = require('../../constants');
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+var _workerpool = require('workerpool')
+var _workerpool2 = _interopRequireDefault(_workerpool)
+var _constants = require('./constants')
+var _constants3 = require('../../constants')
 
 const minWorkers = 1
 const maxWorkers = 10
@@ -36,4 +42,4 @@ const testPuppeteerSSRService = (() => {
 
 testPuppeteerSSRService.init()
 
-exports. default = testPuppeteerSSRService
+exports.default = testPuppeteerSSRService

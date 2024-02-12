@@ -1,5 +1,5 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true});
-
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
 
 const BOT_LIST = new Map([
 	['google', /[Gg]ooglebot/],
@@ -42,8 +42,8 @@ const BOT_LIST = new Map([
 ]) // BOT_LIST
 
 const detectBot = (req) => {
-	const userAgent = (req.getHeader('user-agent') || '') 
-	const secCHUA = (req.getHeader('sec-ch-ua') || '') 
+	const userAgent = req.getHeader('user-agent') || ''
+	const secCHUA = req.getHeader('sec-ch-ua') || ''
 	if (!userAgent && !secCHUA) {
 		return {
 			isBot: false,
@@ -67,4 +67,4 @@ const detectBot = (req) => {
 	return tmpBotInfo
 }
 
-exports. default = detectBot
+exports.default = detectBot

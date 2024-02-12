@@ -1,17 +1,9 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true});
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
 
+var _redirectconfig = require('../app/redirect.config')
 
-
-
-var _redirectconfig = require('../app/redirect.config');
-
-const DetectRedirect
-
-
-
-
-
- = (req, botInfo) => {
+const DetectRedirect = (req, botInfo) => {
 	let statusCode = 200
 	let redirectUrl = ''
 
@@ -22,11 +14,10 @@ const DetectRedirect
 		}
 
 	const REDIRECT_INFO_FORMATTED = (() => {
-		if (!_redirectconfig.REDIRECT_INFO || !_redirectconfig.REDIRECT_INFO.length) return []
+		if (!_redirectconfig.REDIRECT_INFO || !_redirectconfig.REDIRECT_INFO.length)
+			return []
 
-		const tmpRedirectInfoFormatted
-
- = []
+		const tmpRedirectInfoFormatted = []
 
 		for (const redirectInfoItem of _redirectconfig.REDIRECT_INFO) {
 			tmpRedirectInfoFormatted.push({
@@ -57,7 +48,7 @@ const DetectRedirect
 		}
 
 	redirectUrl = (() => {
-		const query = url.searchParams 
+		const query = url.searchParams
 
 		if (query.urlTesting) return url.href
 		let tmpUrl = url.href
@@ -78,4 +69,4 @@ const DetectRedirect
 	else return _redirectconfig.REDIRECT_INJECTION.call(void 0, url)
 }
 
-exports. default = DetectRedirect
+exports.default = DetectRedirect

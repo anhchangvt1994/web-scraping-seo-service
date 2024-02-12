@@ -1,23 +1,60 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
-var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
-var _path = require('path'); var _path2 = _interopRequireDefault(_path);
-var _zlib = require('zlib');
-var _constants = require('../constants');
-var _serverconfig = require('../server.config'); var _serverconfig2 = _interopRequireDefault(_serverconfig);
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+function _optionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
+var _fs = require('fs')
+var _fs2 = _interopRequireDefault(_fs)
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
+var _zlib = require('zlib')
+var _constants = require('../constants')
+var _serverconfig = require('../server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
-var _CleanerService = require('../utils/CleanerService'); var _CleanerService2 = _interopRequireDefault(_CleanerService);
-var _ConsoleHandler = require('../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
-var _CookieHandler = require('../utils/CookieHandler');
-var _InitEnv = require('../utils/InitEnv');
-var _SendFile = require('../utils/SendFile'); var _SendFile2 = _interopRequireDefault(_SendFile);
-var _constants3 = require('./constants');
-var _ForamatUrl = require('./utils/ForamatUrl');
-var _ISRGeneratornext = require('./utils/ISRGenerator.next'); var _ISRGeneratornext2 = _interopRequireDefault(_ISRGeneratornext);
-var _ISRHandler = require('./utils/ISRHandler'); var _ISRHandler2 = _interopRequireDefault(_ISRHandler);
+var _CleanerService = require('../utils/CleanerService')
+var _CleanerService2 = _interopRequireDefault(_CleanerService)
+var _ConsoleHandler = require('../utils/ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _CookieHandler = require('../utils/CookieHandler')
+var _InitEnv = require('../utils/InitEnv')
+var _SendFile = require('../utils/SendFile')
+var _SendFile2 = _interopRequireDefault(_SendFile)
+var _constants3 = require('./constants')
+var _ForamatUrl = require('./utils/ForamatUrl')
+var _ISRGeneratornext = require('./utils/ISRGenerator.next')
+var _ISRGeneratornext2 = _interopRequireDefault(_ISRGeneratornext)
+var _ISRHandler = require('./utils/ISRHandler')
+var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
 
 const _resetCookie = (res) => {
 	_CookieHandler.setCookie.call(void 0, res, `BotInfo=;Max-Age=0;Path=/`)
-	_CookieHandler.setCookie.call(void 0, res, `EnvironmentInfo=;Max-Age=0;Path=/`)
+	_CookieHandler.setCookie.call(
+		void 0,
+		res,
+		`EnvironmentInfo=;Max-Age=0;Path=/`
+	)
 	_CookieHandler.setCookie.call(void 0, res, `DeviceInfo=;Max-Age=0;Path=/`)
 } // _resetCookie
 
@@ -37,10 +74,38 @@ const puppeteerSSRService = (async () => {
 								'Welcome to MTr Web Scraping Service, please provide authorization to use it.'
 							)
 
-					const startGenerating = Number(_optionalChain([req, 'access', _ => _.query, 'optionalAccess', _2 => _2['startGenerating']]))
-					const isFirstRequest = !!_optionalChain([req, 'access', _3 => _3.query, 'optionalAccess', _4 => _4['isFirstRequest']])
-					const url = _optionalChain([req, 'access', _5 => _5.query, 'optionalAccess', _6 => _6['url']])
-						? (decodeURIComponent(_optionalChain([req, 'access', _7 => _7.query, 'optionalAccess', _8 => _8['url']]) ) )
+					const startGenerating = Number(
+						_optionalChain([
+							req,
+							'access',
+							(_) => _.query,
+							'optionalAccess',
+							(_2) => _2['startGenerating'],
+						])
+					)
+					const isFirstRequest = !!_optionalChain([
+						req,
+						'access',
+						(_3) => _3.query,
+						'optionalAccess',
+						(_4) => _4['isFirstRequest'],
+					])
+					const url = _optionalChain([
+						req,
+						'access',
+						(_5) => _5.query,
+						'optionalAccess',
+						(_6) => _6['url'],
+					])
+						? decodeURIComponent(
+								_optionalChain([
+									req,
+									'access',
+									(_7) => _7.query,
+									'optionalAccess',
+									(_8) => _8['url'],
+								])
+						  )
 						: ''
 
 					const result = await _ISRHandler2.default.call(void 0, {
@@ -65,7 +130,7 @@ const puppeteerSSRService = (async () => {
 								'MTr cleaner service can not run in none serverless environment'
 							)
 
-					await _CleanerService2.default.call(void 0, )
+					await _CleanerService2.default.call(void 0)
 
 					_ConsoleHandler2.default.log('Finish clean service!')
 
@@ -73,9 +138,23 @@ const puppeteerSSRService = (async () => {
 				})
 		}
 		_app.get('*', async function (req, res) {
-			const pathname = _optionalChain([req, 'access', _9 => _9.url, 'optionalAccess', _10 => _10.split, 'call', _11 => _11('?'), 'access', _12 => _12[0]])
+			const pathname = _optionalChain([
+				req,
+				'access',
+				(_9) => _9.url,
+				'optionalAccess',
+				(_10) => _10.split,
+				'call',
+				(_11) => _11('?'),
+				'access',
+				(_12) => _12[0],
+			])
 			const cookies = _CookieHandler.getCookieFromResponse.call(void 0, res)
-			const botInfo = _optionalChain([cookies, 'optionalAccess', _13 => _13['BotInfo']])
+			const botInfo = _optionalChain([
+				cookies,
+				'optionalAccess',
+				(_13) => _13['BotInfo'],
+			])
 			const enableISR =
 				_serverconfig2.default.isr.enable &&
 				Boolean(
@@ -89,12 +168,18 @@ const puppeteerSSRService = (async () => {
 				const tmpHeaderAcceptEncoding = headers['accept-encoding'] || ''
 				if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
 				else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1) return 'gzip'
-				return '' 
+				return ''
 			})()
 
 			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
-			_ConsoleHandler2.default.log('enableContentEncoding: ', enableContentEncoding)
-			_ConsoleHandler2.default.log(`headers['accept-encoding']: `, headers['accept-encoding'])
+			_ConsoleHandler2.default.log(
+				'enableContentEncoding: ',
+				enableContentEncoding
+			)
+			_ConsoleHandler2.default.log(
+				`headers['accept-encoding']: `,
+				headers['accept-encoding']
+			)
 			_ConsoleHandler2.default.log('contentEncoding: ', contentEncoding)
 			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
 
@@ -110,9 +195,10 @@ const puppeteerSSRService = (async () => {
 				enableISR &&
 				headers.service !== 'puppeteer'
 			) {
-				const url = _ForamatUrl.convertUrlHeaderToQueryString.call(void 0, 
+				const url = _ForamatUrl.convertUrlHeaderToQueryString.call(
+					void 0,
 					_ForamatUrl.getUrl.call(void 0, req),
-					res ,
+					res,
 					!botInfo.isBot
 				)
 				if (!req.headers['redirect'] && botInfo.isBot) {
@@ -143,7 +229,8 @@ const puppeteerSSRService = (async () => {
 						}
 
 						if (
-							(_constants3.CACHEABLE_STATUS_CODE[result.status] || result.status === 503) &&
+							(_constants3.CACHEABLE_STATUS_CODE[result.status] ||
+								result.status === 503) &&
 							result.response
 						) {
 							const body = (() => {
@@ -163,8 +250,9 @@ const puppeteerSSRService = (async () => {
 
 												if (contentEncoding === 'br') return tmpContent
 												else
-													tmpContent =
-														_zlib.brotliDecompressSync.call(void 0, tmpContent).toString()
+													tmpContent = _zlib.brotliDecompressSync
+														.call(void 0, tmpContent)
+														.toString()
 
 												if (result.status === 200) {
 													if (contentEncoding === 'gzip')
@@ -176,7 +264,9 @@ const puppeteerSSRService = (async () => {
 								} else if (result.response.indexOf('.br') !== -1) {
 									const content = _fs2.default.readFileSync(result.response)
 
-									tmpBody = _zlib.brotliDecompressSync.call(void 0, content).toString()
+									tmpBody = _zlib.brotliDecompressSync
+										.call(void 0, content)
+										.toString()
 								} else {
 									tmpBody = _fs2.default.readFileSync(result.response)
 								}
@@ -202,7 +292,9 @@ const puppeteerSSRService = (async () => {
 								} else if (result.response.indexOf('.br') !== -1) {
 									const content = _fs2.default.readFileSync(result.response)
 
-									tmpBody = _zlib.brotliDecompressSync.call(void 0, content).toString()
+									tmpBody = _zlib.brotliDecompressSync
+										.call(void 0, content)
+										.toString()
 								} else {
 									tmpBody = _fs2.default.readFileSync(result.response)
 								}
@@ -250,12 +342,12 @@ const puppeteerSSRService = (async () => {
 					.header('Cache-Control', 'no-store')
 					.send(
 						req.headers['redirect']
-							? JSON.parse(req.headers['redirect'] )
+							? JSON.parse(req.headers['redirect'])
 							: { status: 200, originPath: pathname, path: pathname }
 					)
 			} else {
 				const filePath =
-					(req.headers['static-html-path'] ) ||
+					req.headers['static-html-path'] ||
 					_path2.default.resolve(__dirname, '../../../dist/index.html')
 				res.raw.setHeader('Cache-Control', 'no-store')
 				return _SendFile2.default.call(void 0, filePath, res.raw)
@@ -265,11 +357,12 @@ const puppeteerSSRService = (async () => {
 
 	return {
 		init(app) {
-			if (!app) return _ConsoleHandler2.default.warn('You need provide express app!')
+			if (!app)
+				return _ConsoleHandler2.default.warn('You need provide express app!')
 			_app = app
 			_allRequestHandler()
 		},
 	}
 })()
 
-exports. default = puppeteerSSRService
+exports.default = puppeteerSSRService

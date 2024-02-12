@@ -1,17 +1,1 @@
-"use strict";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+'use strict'
