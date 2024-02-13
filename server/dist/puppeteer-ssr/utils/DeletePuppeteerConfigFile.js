@@ -1,18 +1,8 @@
-'use strict'
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-var _fs = require('fs')
-var _fs2 = _interopRequireDefault(_fs)
-var _path = require('path')
-var _ConsoleHandler = require('../../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+var _path = require('path');
+var _ConsoleHandler = require('../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
 
-const targetPath = _path.resolve.call(
-	void 0,
-	__dirname,
-	'../../../.puppeteerrc.js'
-)
+const targetPath = _path.resolve.call(void 0, __dirname, '../../../.puppeteerrc.js')
 
 setTimeout(() => {
 	try {

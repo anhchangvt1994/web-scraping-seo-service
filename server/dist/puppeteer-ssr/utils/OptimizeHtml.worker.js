@@ -1,41 +1,23 @@
-'use strict'
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-function _optionalChain(ops) {
-	let lastAccessLHS = undefined
-	let value = ops[0]
-	let i = 1
-	while (i < ops.length) {
-		const op = ops[i]
-		const fn = ops[i + 1]
-		i += 2
-		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
-			return undefined
-		}
-		if (op === 'access' || op === 'optionalAccess') {
-			lastAccessLHS = value
-			value = fn(value)
-		} else if (op === 'call' || op === 'optionalCall') {
-			value = fn((...args) => value.call(lastAccessLHS, ...args))
-			lastAccessLHS = undefined
-		}
-	}
-	return value
-}
-var _htmlminifier = require('html-minifier')
-var _workerpool = require('workerpool')
-var _workerpool2 = _interopRequireDefault(_workerpool)
-var _zlib = require('zlib')
-var _constants = require('../../constants')
-var _InitEnv = require('../../utils/InitEnv')
+"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _htmlminifier = require('html-minifier');
+var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
+var _zlib = require('zlib');
+var _constants = require('../../constants');
+var _InitEnv = require('../../utils/InitEnv');
 
-var _constants3 = require('../constants')
+
+
+
+
+
+
+
+
+
+var _constants3 = require('../constants');
 
 const compressContent = (html, isForce = false) => {
 	if (!html) return ''
-	if (Buffer.isBuffer(html))
-		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
+	if (Buffer.isBuffer(html)) html = _zlib.brotliDecompressSync.call(void 0, html).toString()
 
 	if (
 		(_constants3.DISABLE_COMPRESS_HTML && !isForce) ||
@@ -59,10 +41,13 @@ const compressContent = (html, isForce = false) => {
 	return html
 } // compressContent
 
-const optimizeContent = (html, isFullOptimize = false, isForce = false) => {
+const optimizeContent = (
+	html,
+	isFullOptimize = false,
+	isForce = false
+) => {
 	if (!html) return ''
-	if (Buffer.isBuffer(html))
-		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
+	if (Buffer.isBuffer(html)) html = _zlib.brotliDecompressSync.call(void 0, html).toString()
 
 	if (_constants3.DISABLE_OPTIMIZE && !isForce) return html
 
@@ -87,21 +72,9 @@ const optimizeContent = (html, isFullOptimize = false, isForce = false) => {
 				return `<html ${newAttrs}>`
 			})
 			.replace(_constants3.regexHandleAttrsImageTag, (match, tag, curAttrs) => {
-				const alt = _optionalChain([
-					/alt=("|'|)(?<alt>[^"']+)("|'|)+(\s|$)/g,
-					'access',
-					(_) => _.exec,
-					'call',
-					(_2) => _2(curAttrs),
-					'optionalAccess',
-					(_3) => _3.groups,
-					'optionalAccess',
-					(_4) => _4.alt,
-					'optionalAccess',
-					(_5) => _5.trim,
-					'call',
-					(_6) => _6(),
-				])
+				const alt = _optionalChain([/alt=("|'|)(?<alt>[^"']+)("|'|)+(\s|$)/g
+, 'access', _ => _.exec, 'call', _2 => _2(curAttrs)
+, 'optionalAccess', _3 => _3.groups, 'optionalAccess', _4 => _4.alt, 'optionalAccess', _5 => _5.trim, 'call', _6 => _6()])
 
 				if (!alt) return ''
 
@@ -154,17 +127,9 @@ const optimizeContent = (html, isFullOptimize = false, isForce = false) => {
 
 					switch (true) {
 						case newTag === 'a':
-							const href = _optionalChain([
-								/href=("|'|)(?<href>.*?)("|'|)+(\s|$)/g,
-								'access',
-								(_7) => _7.exec,
-								'call',
-								(_8) => _8(curAttrs),
-								'optionalAccess',
-								(_9) => _9.groups,
-								'optionalAccess',
-								(_10) => _10.href,
-							])
+							const href = _optionalChain([/href=("|'|)(?<href>.*?)("|'|)+(\s|$)/g, 'access', _7 => _7.exec, 'call', _8 => _8(
+								curAttrs
+							), 'optionalAccess', _9 => _9.groups, 'optionalAccess', _10 => _10.href])
 							tmpContent = tmpContent.replace(
 								/[Cc]lick here|[Cc]lick this|[Gg]o|[Hh]ere|[Tt]his|[Ss]tart|[Rr]ight here|[Mm]ore|[Ll]earn more/g,
 								''
@@ -178,17 +143,10 @@ const optimizeContent = (html, isFullOptimize = false, isForce = false) => {
 								tmpContent = `${tmpContentWithTrim} ${href}`
 
 							if (curAttrs.indexOf('aria-label=') !== -1) {
-								const ariaLabel = _optionalChain([
-									/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g,
-									'access',
-									(_11) => _11.exec,
-									'call',
-									(_12) => _12(curAttrs),
-									'optionalAccess',
-									(_13) => _13.groups,
-									'optionalAccess',
-									(_14) => _14.ariaLabel,
-								])
+								const ariaLabel =
+									_optionalChain([/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g, 'access', _11 => _11.exec, 'call', _12 => _12(
+										curAttrs
+									), 'optionalAccess', _13 => _13.groups, 'optionalAccess', _14 => _14.ariaLabel])
 
 								if (ariaLabel !== tmpContent)
 									newAttrs = curAttrs.replace(
@@ -209,17 +167,10 @@ const optimizeContent = (html, isFullOptimize = false, isForce = false) => {
 								newAttrs = `type="button" ${newAttrs}`
 
 							if (curAttrs.indexOf('aria-label=') !== -1) {
-								const ariaLabel = _optionalChain([
-									/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g,
-									'access',
-									(_15) => _15.exec,
-									'call',
-									(_16) => _16(curAttrs),
-									'optionalAccess',
-									(_17) => _17.groups,
-									'optionalAccess',
-									(_18) => _18.ariaLabel,
-								])
+								const ariaLabel =
+									_optionalChain([/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g, 'access', _15 => _15.exec, 'call', _16 => _16(
+										curAttrs
+									), 'optionalAccess', _17 => _17.groups, 'optionalAccess', _18 => _18.ariaLabel])
 
 								tmpContent = ariaLabel
 							} else {

@@ -1,22 +1,13 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
-var _constants = require('../constants')
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _path = require('path'); var _path2 = _interopRequireDefault(_path);
+var _constants = require('../constants');
 
-var _CleanerService = require('../utils/CleanerService')
-var _CleanerService2 = _interopRequireDefault(_CleanerService)
-var _ConsoleHandler = require('../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _constants3 = require('./constants')
-var _ForamatUrlbun = require('./utils/ForamatUrl.bun')
-var _SSRGeneratornext = require('./utils/SSRGenerator.next')
-var _SSRGeneratornext2 = _interopRequireDefault(_SSRGeneratornext)
-var _SSRHandler = require('./utils/SSRHandler')
-var _SSRHandler2 = _interopRequireDefault(_SSRHandler)
+var _CleanerService = require('../utils/CleanerService'); var _CleanerService2 = _interopRequireDefault(_CleanerService);
+var _ConsoleHandler = require('../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _constants3 = require('./constants');
+var _ForamatUrlbun = require('./utils/ForamatUrl.bun');
+var _SSRGeneratornext = require('./utils/SSRGenerator.next'); var _SSRGeneratornext2 = _interopRequireDefault(_SSRGeneratornext);
+var _SSRHandler = require('./utils/SSRHandler'); var _SSRHandler2 = _interopRequireDefault(_SSRHandler);
+
 
 const puppeteerSSRService = (async () => {
 	let _app
@@ -37,7 +28,9 @@ const puppeteerSSRService = (async () => {
 
 					const startGenerating = Number(query.startGenerating)
 					const isFirstRequest = !!query.isFirstRequest
-					const url = query.url ? decodeURIComponent(query.url) : ''
+					const url = query.url
+						? (decodeURIComponent(query.url ) )
+						: ''
 
 					const result = await _SSRHandler2.default.call(void 0, {
 						startGenerating,
@@ -61,7 +54,7 @@ const puppeteerSSRService = (async () => {
 						return 'MTr cleaner service can not run in none serverless environment'
 					}
 
-					await _CleanerService2.default.call(void 0)
+					await _CleanerService2.default.call(void 0, )
 
 					_ConsoleHandler2.default.log('Finish clean service!')
 
@@ -71,7 +64,7 @@ const puppeteerSSRService = (async () => {
 		}
 		_app.get('*', async ({ cookie, ...ctx }) => {
 			const req = ctx.request
-			const botInfoStringify = ctx.store['Bot-Info']
+			const botInfoStringify = ctx.store['Bot-Info'] 
 			const botInfo = JSON.parse(botInfoStringify)
 
 			cookie['BotInfo'].set({
@@ -82,8 +75,7 @@ const puppeteerSSRService = (async () => {
 				value: ctx.store['Device-Info'],
 				maxAge: _constants3.COOKIE_EXPIRED,
 			})
-			const url = _ForamatUrlbun.convertUrlHeaderToQueryString.call(
-				void 0,
+			const url = _ForamatUrlbun.convertUrlHeaderToQueryString.call(void 0, 
 				_ForamatUrlbun.getUrl.call(void 0, ctx.store['url']),
 				[ctx.store['Bot-Info'], ctx.store['Device-Info']],
 				true
@@ -117,10 +109,7 @@ const puppeteerSSRService = (async () => {
 						}
 
 						// Add Server-Timing! See https://w3c.github.io/server-timing/.
-						if (
-							_constants3.CACHEABLE_STATUS_CODE[result.status] ||
-							result.status === 503
-						)
+						if (_constants3.CACHEABLE_STATUS_CODE[result.status] || result.status === 503)
 							return Bun.file(result.response).text()
 						// Serve prerendered page as response.
 						else return result.html || `${result.status} Error` // Serve prerendered page as response.
@@ -162,7 +151,7 @@ const puppeteerSSRService = (async () => {
 			ctx.set.headers['Cache-Control'] = 'public, max-age: 31556952'
 			ctx.set.status = 200
 			return Bun.file(
-				req.headers.get('staticHtmlPath') ||
+				(req.headers.get('staticHtmlPath') ) ||
 					_path2.default.resolve(__dirname, '../../../dist/index.html')
 			)
 		})
@@ -170,12 +159,11 @@ const puppeteerSSRService = (async () => {
 
 	return {
 		init(app) {
-			if (!app)
-				return _ConsoleHandler2.default.warn('You need provide express app!')
+			if (!app) return _ConsoleHandler2.default.warn('You need provide express app!')
 			_app = app
 			_allRequestHandler()
 		},
 	}
 })()
 
-exports.default = puppeteerSSRService
+exports. default = puppeteerSSRService

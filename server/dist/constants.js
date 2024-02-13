@@ -1,47 +1,30 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-var _InitEnv = require('./utils/InitEnv')
-var _fs = require('fs')
-var _fs2 = _interopRequireDefault(_fs)
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _InitEnv = require('./utils/InitEnv');
+var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+var _path = require('path'); var _path2 = _interopRequireDefault(_path);
 
-const pagesPath = _InitEnv.PROCESS_ENV.IS_SERVER
+ const pagesPath = _InitEnv.PROCESS_ENV.IS_SERVER
 	? (() => {
 			const tmpPath = '/tmp'
 			if (_fs2.default.existsSync(tmpPath)) return tmpPath + '/pages'
 
-			return _path2.default.resolve(
-				__dirname,
-				'./puppeteer-ssr/utils/Cache.worker/pages'
-			)
+			return _path2.default.resolve(__dirname, './puppeteer-ssr/utils/Cache.worker/pages')
 	  })()
-	: _path2.default.resolve(
-			__dirname,
-			'./puppeteer-ssr/utils/Cache.worker/pages'
-	  )
-exports.pagesPath = pagesPath
+	: _path2.default.resolve(__dirname, './puppeteer-ssr/utils/Cache.worker/pages'); exports.pagesPath = pagesPath
 
-const userDataPath = _InitEnv.PROCESS_ENV.IS_SERVER
+ const userDataPath = _InitEnv.PROCESS_ENV.IS_SERVER
 	? (() => {
 			const tmpPath = '/tmp'
 			if (_fs2.default.existsSync(tmpPath)) return tmpPath + '/browsers'
 
 			return _path2.default.resolve(__dirname, './puppeteer-ssr/browsers')
 	  })()
-	: _path2.default.resolve(__dirname, './puppeteer-ssr/browsers')
-exports.userDataPath = userDataPath
+	: _path2.default.resolve(__dirname, './puppeteer-ssr/browsers'); exports.userDataPath = userDataPath
 
-const resourceExtension = _InitEnv.PROCESS_ENV.IS_SERVER ? 'js' : 'ts'
-exports.resourceExtension = resourceExtension
+ const resourceExtension = _InitEnv.PROCESS_ENV.IS_SERVER ? 'js' : 'ts'; exports.resourceExtension = resourceExtension
 
-const SERVER_LESS = !!_InitEnv.PROCESS_ENV.SERVER_LESS
-exports.SERVER_LESS = SERVER_LESS
+ const SERVER_LESS = !!_InitEnv.PROCESS_ENV.SERVER_LESS; exports.SERVER_LESS = SERVER_LESS
 
-const LOCALE_LIST_WITH_COUNTRY = {
+ const LOCALE_LIST_WITH_COUNTRY = {
 	af: ['en'],
 	al: ['sq'],
 	dz: ['ar'],
@@ -235,10 +218,9 @@ const LOCALE_LIST_WITH_COUNTRY = {
 	ye: ['ar'],
 	zm: ['en'],
 	zw: ['en'],
-}
-exports.LOCALE_LIST_WITH_COUNTRY = LOCALE_LIST_WITH_COUNTRY
+}; exports.LOCALE_LIST_WITH_COUNTRY = LOCALE_LIST_WITH_COUNTRY
 
-const LOCALE_LIST_WITH_LANGUAGE = {
+ const LOCALE_LIST_WITH_LANGUAGE = {
 	en: [
 		'ag',
 		'ar',
@@ -401,49 +383,30 @@ const LOCALE_LIST_WITH_LANGUAGE = {
 	uk: ['ua'],
 	uz: ['uz'],
 	vi: ['vn'],
-}
-exports.LOCALE_LIST_WITH_LANGUAGE = LOCALE_LIST_WITH_LANGUAGE
+}; exports.LOCALE_LIST_WITH_LANGUAGE = LOCALE_LIST_WITH_LANGUAGE
 
-const COUNTRY_CODE_DEFAULT = 'us'
-exports.COUNTRY_CODE_DEFAULT = COUNTRY_CODE_DEFAULT
-const LANGUAGE_CODE_DEFAULT = 'en'
-exports.LANGUAGE_CODE_DEFAULT = LANGUAGE_CODE_DEFAULT
-const ENABLE_CONSOLE_DEBUGGER = Boolean(
+ const COUNTRY_CODE_DEFAULT = 'us'; exports.COUNTRY_CODE_DEFAULT = COUNTRY_CODE_DEFAULT
+ const LANGUAGE_CODE_DEFAULT = 'en'; exports.LANGUAGE_CODE_DEFAULT = LANGUAGE_CODE_DEFAULT
+ const ENABLE_CONSOLE_DEBUGGER = Boolean(
 	_InitEnv.PROCESS_ENV.ENABLE_CONSOLE_DEBUGGER
-)
-exports.ENABLE_CONSOLE_DEBUGGER = ENABLE_CONSOLE_DEBUGGER
-const POWER_LEVEL = _InitEnv.PROCESS_ENV.POWER_LEVEL
+); exports.ENABLE_CONSOLE_DEBUGGER = ENABLE_CONSOLE_DEBUGGER
+ const POWER_LEVEL = _InitEnv.PROCESS_ENV.POWER_LEVEL
 	? Number(_InitEnv.PROCESS_ENV.POWER_LEVEL)
-	: 3
-exports.POWER_LEVEL = POWER_LEVEL
-var POWER_LEVEL_LIST
-;(function (POWER_LEVEL_LIST) {
-	const ONE = 1
-	POWER_LEVEL_LIST[(POWER_LEVEL_LIST['ONE'] = ONE)] = 'ONE' // low of scraping power
-	const TWO = 2
-	POWER_LEVEL_LIST[(POWER_LEVEL_LIST['TWO'] = TWO)] = 'TWO' // medium of scraping power
-	const THREE = 3
-	POWER_LEVEL_LIST[(POWER_LEVEL_LIST['THREE'] = THREE)] = 'THREE' // hight of scraping power
-})(POWER_LEVEL_LIST || (exports.POWER_LEVEL_LIST = POWER_LEVEL_LIST = {}))
-const BANDWIDTH_LEVEL = _InitEnv.PROCESS_ENV.BANDWIDTH_LEVEL
+	: 3; exports.POWER_LEVEL = POWER_LEVEL
+var POWER_LEVEL_LIST; (function (POWER_LEVEL_LIST) {
+	const ONE = 1; POWER_LEVEL_LIST[POWER_LEVEL_LIST["ONE"] = ONE] = "ONE"; // low of scraping power
+	const TWO = 2; POWER_LEVEL_LIST[POWER_LEVEL_LIST["TWO"] = TWO] = "TWO"; // medium of scraping power
+	const THREE = 3; POWER_LEVEL_LIST[POWER_LEVEL_LIST["THREE"] = THREE] = "THREE"; // hight of scraping power
+})(POWER_LEVEL_LIST || (exports.POWER_LEVEL_LIST = POWER_LEVEL_LIST = {}));
+ const BANDWIDTH_LEVEL = _InitEnv.PROCESS_ENV.BANDWIDTH_LEVEL
 	? Number(_InitEnv.PROCESS_ENV.BANDWIDTH_LEVEL)
-	: 2
-exports.BANDWIDTH_LEVEL = BANDWIDTH_LEVEL
-var BANDWIDTH_LEVEL_LIST
-;(function (BANDWIDTH_LEVEL_LIST) {
-	const ONE = 1
-	BANDWIDTH_LEVEL_LIST[(BANDWIDTH_LEVEL_LIST['ONE'] = ONE)] = 'ONE' // low
-	const TWO = 2
-	BANDWIDTH_LEVEL_LIST[(BANDWIDTH_LEVEL_LIST['TWO'] = TWO)] = 'TWO' // hight
-})(
-	BANDWIDTH_LEVEL_LIST ||
-		(exports.BANDWIDTH_LEVEL_LIST = BANDWIDTH_LEVEL_LIST = {})
-)
-const COOKIE_EXPIRED =
-	exports.BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO &&
-	_InitEnv.ENV !== 'development'
+	: 2; exports.BANDWIDTH_LEVEL = BANDWIDTH_LEVEL
+var BANDWIDTH_LEVEL_LIST; (function (BANDWIDTH_LEVEL_LIST) {
+	const ONE = 1; BANDWIDTH_LEVEL_LIST[BANDWIDTH_LEVEL_LIST["ONE"] = ONE] = "ONE"; // low
+	const TWO = 2; BANDWIDTH_LEVEL_LIST[BANDWIDTH_LEVEL_LIST["TWO"] = TWO] = "TWO"; // hight
+})(BANDWIDTH_LEVEL_LIST || (exports.BANDWIDTH_LEVEL_LIST = BANDWIDTH_LEVEL_LIST = {}));
+ const COOKIE_EXPIRED =
+	exports.BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO && _InitEnv.ENV !== 'development'
 		? 20000
-		: 60000
-exports.COOKIE_EXPIRED = COOKIE_EXPIRED
-const IS_REMOTE_CRAWLER = Boolean(_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER)
-exports.IS_REMOTE_CRAWLER = IS_REMOTE_CRAWLER
+		: 60000; exports.COOKIE_EXPIRED = COOKIE_EXPIRED
+ const IS_REMOTE_CRAWLER = Boolean(_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER); exports.IS_REMOTE_CRAWLER = IS_REMOTE_CRAWLER
