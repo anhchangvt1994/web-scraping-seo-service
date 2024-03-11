@@ -8,8 +8,8 @@ var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefau
 
 
 
-
 var _constants = require('../../constants');
+var _serverconfig = require('../../server.config'); var _serverconfig2 = _interopRequireDefault(_serverconfig);
 var _store = require('../../store');
 var _ConsoleHandler = require('../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
 
@@ -64,9 +64,9 @@ const BrowserManager = (
 
 		const selfUserDataDirPath =
 			reserveUserDataDirPath ||
-			`${userDataDir()}${_constants.IS_REMOTE_CRAWLER ? '_remote' : ''}`
+			`${userDataDir()}${_serverconfig2.default.isRemoteCrawler ? '_remote' : ''}`
 		reserveUserDataDirPath = `${userDataDir()}_reserve${
-			_constants.IS_REMOTE_CRAWLER ? '_remote' : ''
+			_serverconfig2.default.isRemoteCrawler ? '_remote' : ''
 		}`
 
 		browserLaunch = new Promise(async (res, rej) => {

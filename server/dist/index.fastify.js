@@ -58,7 +58,7 @@ const startServer = async () => {
 
 	app.use(_cors2.default.call(void 0, ))
 
-	if (_serverconfig2.default.crawler && !_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
+	if (_serverconfig2.default.crawler && !_serverconfig2.default.isRemoteCrawler) {
 		app
 			.use('/robots.txt', _servestatic2.default.call(void 0, _path2.default.resolve(__dirname, '../robots.txt')))
 			.use(function (req, res, next) {
@@ -182,7 +182,7 @@ const startServer = async () => {
 			}
 			next()
 		})
-	if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
+	if (!_serverconfig2.default.isRemoteCrawler) {
 		app.use(function (req, res, next) {
 			const redirectResult = _DetectRedirect2.default.call(void 0, req, res)
 
@@ -257,7 +257,7 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
+	if (!_serverconfig2.default.isRemoteCrawler) {
 		if (_InitEnv.ENV === 'development') {
 			// NOTE - restart server onchange
 			// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {

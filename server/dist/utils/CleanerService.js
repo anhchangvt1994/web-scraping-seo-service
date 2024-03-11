@@ -11,6 +11,7 @@ var _constants3 = require('../puppeteer-ssr/constants');
 var _store = require('../store');
 var _ConsoleHandler = require('./ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
 var _InitEnv = require('./InitEnv');
+var _serverconfig = require('../server.config'); var _serverconfig2 = _interopRequireDefault(_serverconfig);
 
 const CleanerService = async () => {
 	// NOTE - Browsers Cleaner
@@ -86,15 +87,18 @@ const CleanerService = async () => {
 		} finally {
 			pool.terminate()
 
-			if (!_constants.SERVER_LESS)
+			if (!_constants.SERVER_LESS) {
+				const cacheTimeHour = _serverconfig2.default.crawl.cache.time / 3600
+
 				setTimeout(() => {
-					cleanPages(5)
-				}, 300000)
+					cleanPages(cacheTimeHour)
+				}, 21600000)
+			}
 		}
 	}
 
-	if (_constants.SERVER_LESS) cleanPages(10)
-	else await cleanPages()
+	if (_constants.SERVER_LESS) cleanPages(360)
+	else await cleanPages(360)
 }
 
 if (!_constants.SERVER_LESS) CleanerService()

@@ -31,15 +31,11 @@ if (!_fs2.default.existsSync(_constants.pagesPath)) {
 		return
 	}
 
-	// return url
-	// 	.replace(regexKeyConverter, '')
-	// 	.replace(/\//g, '|')
-	// 	.replace('?|?&', '')
-	// return url.split('?')[0].replace(/^https?:\/\/(www\.)?|^www\.|\/$/, '')
-	return _crypto2.default
-		.createHash('md5')
-		.update(url.replace(exports.regexKeyConverter, ''))
-		.digest('hex')
+	url = url
+		.replace('/?', '?')
+		.replace(exports.regexKeyConverter, '')
+		.replace(/\?(?:\&|)$/g, '')
+	return _crypto2.default.createHash('md5').update(url).digest('hex')
 }; exports.getKey = getKey // getKey
 
  const getFileInfo = async (file) => {
