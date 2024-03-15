@@ -1,6 +1,7 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true});
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
 
- const defaultServerConfig = {
+const defaultServerConfig = {
 	locale: {
 		enable: false,
 		routes: {},
@@ -17,4 +18,5 @@
 		optimize: true,
 		routes: {},
 	},
-}; exports.defaultServerConfig = defaultServerConfig
+}
+exports.defaultServerConfig = defaultServerConfig

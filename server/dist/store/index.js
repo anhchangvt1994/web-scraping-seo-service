@@ -1,20 +1,26 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true});
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
 
- const BrowserStore = {}; exports.BrowserStore = BrowserStore
- const HeadersStore = {}; exports.HeadersStore = HeadersStore
- const PromiseStore = {}; exports.PromiseStore = PromiseStore
+const BrowserStore = {}
+exports.BrowserStore = BrowserStore
+const HeadersStore = {}
+exports.HeadersStore = HeadersStore
+const PromiseStore = {}
+exports.PromiseStore = PromiseStore
 
- const store = {
+const store = {
 	browser: exports.BrowserStore,
 	headers: exports.HeadersStore,
 	promise: exports.PromiseStore,
-}; exports.store = store
+}
+exports.store = store
 
- const getStoreList = () => {
+const getStoreList = () => {
 	return exports.store
-}; exports.getStoreList = getStoreList // getStoreList
+}
+exports.getStoreList = getStoreList // getStoreList
 
- const getStore = (key) => {
+const getStore = (key) => {
 	if (!key) return
 	if (
 		!exports.store[key] ||
@@ -24,11 +30,13 @@
 	)
 		return exports.store[key]
 
-	return exports.store[key] 
-}; exports.getStore = getStore // getStore
+	return exports.store[key]
+}
+exports.getStore = getStore // getStore
 
- const setStore = (key, value) => {
+const setStore = (key, value) => {
 	if (!key || !value) return
 
 	exports.store[key] = value
-}; exports.setStore = setStore // getStores
+}
+exports.setStore = setStore // getStores

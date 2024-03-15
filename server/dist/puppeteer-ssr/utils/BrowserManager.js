@@ -1,45 +1,73 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _chromiummin = require('@sparticuz/chromium-min'); var _chromiummin2 = _interopRequireDefault(_chromiummin);
-var _path = require('path'); var _path2 = _interopRequireDefault(_path);
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+function _optionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
+var _chromiummin = require('@sparticuz/chromium-min')
+var _chromiummin2 = _interopRequireDefault(_chromiummin)
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
 
-var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
+var _workerpool = require('workerpool')
+var _workerpool2 = _interopRequireDefault(_workerpool)
 
+var _constants = require('../../constants')
+var _serverconfig = require('../../server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
+var _store = require('../../store')
+var _ConsoleHandler = require('../../utils/ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
+var _constants3 = require('../constants')
 
-
-
-
-var _constants = require('../../constants');
-var _serverconfig = require('../../server.config'); var _serverconfig2 = _interopRequireDefault(_serverconfig);
-var _store = require('../../store');
-var _ConsoleHandler = require('../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
-
-
-
-
-
-var _constants3 = require('../constants');
-
-
-
-
-
-
-
- const deleteUserDataDir = async (dir) => {
+const deleteUserDataDir = async (dir) => {
 	if (dir) {
 		try {
-			await _optionalChain([_workerpool2.default, 'access', _ => _.pool, 'call', _2 => _2(
-				_path2.default.resolve(
-					__dirname,
-					`./FollowResource.worker/index.${_constants.resourceExtension}`
-				)
-			), 'optionalAccess', _3 => _3.exec, 'call', _4 => _4('deleteResource', [dir])])
+			await _optionalChain([
+				_workerpool2.default,
+				'access',
+				(_) => _.pool,
+				'call',
+				(_2) =>
+					_2(
+						_path2.default.resolve(
+							__dirname,
+							`./FollowResource.worker/index.${_constants.resourceExtension}`
+						)
+					),
+				'optionalAccess',
+				(_3) => _3.exec,
+				'call',
+				(_4) => _4('deleteResource', [dir]),
+			])
 		} catch (err) {
 			_ConsoleHandler2.default.log('BrowserManager line 39:')
 			_ConsoleHandler2.default.error(err)
 		}
 	}
-}; exports.deleteUserDataDir = deleteUserDataDir // deleteUserDataDir
+}
+exports.deleteUserDataDir = deleteUserDataDir // deleteUserDataDir
 
 const _getSafePage = (page) => {
 	let SafePage = page
@@ -64,7 +92,9 @@ const BrowserManager = (
 
 		const selfUserDataDirPath =
 			reserveUserDataDirPath ||
-			`${userDataDir()}${_serverconfig2.default.isRemoteCrawler ? '_remote' : ''}`
+			`${userDataDir()}${
+				_serverconfig2.default.isRemoteCrawler ? '_remote' : ''
+			}`
 		reserveUserDataDirPath = `${userDataDir()}_reserve${
 			_serverconfig2.default.isRemoteCrawler ? '_remote' : ''
 		}`
@@ -84,7 +114,9 @@ const BrowserManager = (
 			try {
 				if (_constants3.canUseLinuxChromium && !promiseStore.executablePath) {
 					_ConsoleHandler2.default.log('Create executablePath')
-					promiseStore.executablePath = _chromiummin2.default.executablePath(_constants3.chromiumPath)
+					promiseStore.executablePath = _chromiummin2.default.executablePath(
+						_constants3.chromiumPath
+					)
 				}
 
 				browserStore.userDataPath = selfUserDataDirPath
@@ -158,9 +190,9 @@ const BrowserManager = (
 		if (browserLaunch) {
 			try {
 				let tabsClosed = 0
-				const browser = (await browserLaunch) 
+				const browser = await browserLaunch
 
-				browser.on('createNewPage', (async (page) => {
+				browser.on('createNewPage', async (page) => {
 					const safePage = _getSafePage(page)
 					await new Promise((resolveCloseTab) => {
 						const timeoutCloseTab = setTimeout(async () => {
@@ -176,10 +208,19 @@ const BrowserManager = (
 							}
 						}, 180000)
 
-						_optionalChain([safePage, 'call', _5 => _5(), 'optionalAccess', _6 => _6.once, 'call', _7 => _7('close', () => {
-							clearTimeout(timeoutCloseTab)
-							resolveCloseTab(null)
-						})])
+						_optionalChain([
+							safePage,
+							'call',
+							(_5) => _5(),
+							'optionalAccess',
+							(_6) => _6.once,
+							'call',
+							(_7) =>
+								_7('close', () => {
+									clearTimeout(timeoutCloseTab)
+									resolveCloseTab(null)
+								}),
+						])
 					})
 
 					tabsClosed++
@@ -192,10 +233,12 @@ const BrowserManager = (
 								_ConsoleHandler2.default.log('BrowserManager line 193')
 								_ConsoleHandler2.default.error(err)
 							}
-
-						exports.deleteUserDataDir.call(void 0, selfUserDataDirPath)
 					}
-				}) )
+				})
+
+				browser.once('disconnected', () => {
+					exports.deleteUserDataDir.call(void 0, selfUserDataDirPath)
+				})
 			} catch (err) {
 				_ConsoleHandler2.default.log('Browser manager line 177:')
 				_ConsoleHandler2.default.error(err)
@@ -218,27 +261,39 @@ const BrowserManager = (
 		// const pages = (await (await curBrowserLaunch)?.pages())?.length ?? 0;
 		// await new Promise((res) => setTimeout(res, pages * 10));
 
-		return curBrowserLaunch 
+		return curBrowserLaunch
 	} // _get
 
 	const _newPage = async () => {
-		let browser
-		let page
 		try {
-			browser = await _get()
-			page = await _optionalChain([browser, 'optionalAccess', _8 => _8.newPage, 'optionalCall', _9 => _9()])
+			const browser = await _get()
 
-			if (!page) {
+			if (!browser.connected) {
+				browser.close()
 				__launch()
 				return _newPage()
 			}
+
+			const page = await _optionalChain([
+				browser,
+				'optionalAccess',
+				(_8) => _8.newPage,
+				'optionalCall',
+				(_9) => _9(),
+			])
+
+			if (!page) {
+				browser.close()
+				__launch()
+				return _newPage()
+			}
+
+			browser.emit('createNewPage', page)
+			return page
 		} catch (err) {
 			__launch()
 			return _newPage()
 		}
-
-		if (page) browser.emit('createNewPage', page)
-		return page
 	} // _newPage
 
 	const _isReady = () => {
@@ -252,4 +307,4 @@ const BrowserManager = (
 	}
 }
 
-exports. default = BrowserManager
+exports.default = BrowserManager

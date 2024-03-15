@@ -73,6 +73,7 @@ export const PROCESS_ENV = (() => {
 
   const tmpProcessEnv = process.env as IProcessENV;
 
+  tmpProcessEnv.BUILD_TOOL = "";
   tmpProcessEnv.RESET_RESOURCE = true;
 
   if (process.env.IS_REMOTE_CRAWLER !== undefined) {

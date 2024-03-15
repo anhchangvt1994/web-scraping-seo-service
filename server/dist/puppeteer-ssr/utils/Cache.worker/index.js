@@ -1,27 +1,54 @@
-"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
-var _path = require('path'); var _path2 = _interopRequireDefault(_path);
-var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
-var _zlib = require('zlib');
-var _constants = require('../../../constants');
-var _ConsoleHandler = require('../../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+'use strict'
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+function _nullishCoalesce(lhs, rhsFn) {
+	if (lhs != null) {
+		return lhs
+	} else {
+		return rhsFn()
+	}
+}
+function _optionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
+var _fs = require('fs')
+var _fs2 = _interopRequireDefault(_fs)
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
+var _workerpool = require('workerpool')
+var _workerpool2 = _interopRequireDefault(_workerpool)
+var _zlib = require('zlib')
+var _constants = require('../../../constants')
+var _ConsoleHandler = require('../../../utils/ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
+var _utils = require('./utils')
 
+const maintainFile = _path2.default.resolve(
+	__dirname,
+	'../../../../maintain.html'
+)
 
-
-
-
-var _utils = require('./utils');
-
-const maintainFile = _path2.default.resolve(__dirname, '../../../../maintain.html')
-
-
-
-
-
-const get = async (
-	url,
-	options
-) => {
+const get = async (url, options) => {
 	options = options || {
 		autoCreateIfEmpty: true,
 	}
@@ -78,7 +105,7 @@ const get = async (
 					ttRenderMs: 200,
 					available: false,
 					isInit: true,
-				} 
+				}
 			}
 		}
 	}
@@ -93,9 +120,18 @@ const get = async (
 			file,
 			response: maintainFile,
 			status: 503,
-			createdAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _ => _.createdAt]), () => ( curTime)),
-			updatedAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _2 => _2.updatedAt]), () => ( curTime)),
-			requestedAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _3 => _3.requestedAt]), () => ( curTime)),
+			createdAt: _nullishCoalesce(
+				_optionalChain([info, 'optionalAccess', (_) => _.createdAt]),
+				() => curTime
+			),
+			updatedAt: _nullishCoalesce(
+				_optionalChain([info, 'optionalAccess', (_2) => _2.updatedAt]),
+				() => curTime
+			),
+			requestedAt: _nullishCoalesce(
+				_optionalChain([info, 'optionalAccess', (_3) => _3.requestedAt]),
+				() => curTime
+			),
 			ttRenderMs: 200,
 			available: false,
 			isInit: false,
@@ -119,11 +155,7 @@ const get = async (
 	}
 } // get
 
-const set = async ({
-	html,
-	url,
-	isRaw = false,
-}) => {
+const set = async ({ html, url, isRaw = false }) => {
 	const key = _utils.getKey.call(void 0, url)
 
 	if (!html) {
@@ -165,10 +197,9 @@ const set = async ({
 		}
 	}
 
-	const result =
-		(await get(url, {
-			autoCreateIfEmpty: false,
-		})) || ({ html, status: 200 } )
+	const result = (await get(url, {
+		autoCreateIfEmpty: false,
+	})) || { html, status: 200 }
 
 	return result
 } // set
