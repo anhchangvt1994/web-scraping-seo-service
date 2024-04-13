@@ -1,7 +1,6 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
+"use strict";Object.defineProperty(exports, "__esModule", {value: true});
 
-const defaultServerConfig = {
+ const defaultServerConfig = {
 	locale: {
 		enable: false,
 		routes: {},
@@ -9,6 +8,7 @@ const defaultServerConfig = {
 	isRemoteCrawler: false,
 	crawl: {
 		enable: true,
+		content: 'desktop',
 		cache: {
 			enable: true,
 			time: 4 * 3600,
@@ -18,5 +18,4 @@ const defaultServerConfig = {
 		optimize: true,
 		routes: {},
 	},
-}
-exports.defaultServerConfig = defaultServerConfig
+}; exports.defaultServerConfig = defaultServerConfig
