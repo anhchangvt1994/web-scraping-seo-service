@@ -18,4 +18,7 @@
 		optimize: true,
 		routes: {},
 	},
+	api: {
+		list: {},
+	},
 }; exports.defaultServerConfig = defaultServerConfig

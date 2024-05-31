@@ -49,7 +49,7 @@ const optimizeContent = (html, isFullOptimize = false) => {
 			.replace(_constants3.regexHandleAttrsHtmlTag, (match, tag, curAttrs) => {
 				let newAttrs = curAttrs
 
-				if (newAttrs.indexOf('lang') === -1) {
+				if (!newAttrs.includes('lang')) {
 					newAttrs = `lang="en"`
 				}
 
@@ -63,7 +63,7 @@ const optimizeContent = (html, isFullOptimize = false) => {
 				if (!alt) return ''
 
 				let newAttrs = (
-					curAttrs.indexOf('seo-tag') !== -1
+					curAttrs.includes('seo-tag')
 						? curAttrs
 						: curAttrs.replace(
 								/(?<srcAttr>(src|srcset))=("|'|)(.*?)("|'|)+(\s|$)/g,
@@ -72,9 +72,9 @@ const optimizeContent = (html, isFullOptimize = false) => {
 				).trim()
 
 				switch (true) {
-					case newAttrs.indexOf('height=') === -1:
+					case !newAttrs.includes('height='):
 						newAttrs = `height="200" ${newAttrs}`
-					case newAttrs.indexOf('width=') === -1:
+					case !newAttrs.includes('width='):
 						newAttrs = `width="150" ${newAttrs}`
 					default:
 						break
@@ -92,7 +92,7 @@ const optimizeContent = (html, isFullOptimize = false) => {
 					let result
 
 					switch (true) {
-						case newTag === 'a' && curAttrs.indexOf('href=') === -1:
+						case newTag === 'a' && !curAttrs.includes('href='):
 							newTag = 'button'
 							newAttrs = `type="button" ${newAttrs}`
 							tmpEndTag = 'button'
@@ -126,7 +126,7 @@ const optimizeContent = (html, isFullOptimize = false) => {
 							if (!tmpContentWithTrim.replace(/<[^>]*>/g, ''))
 								tmpContent = `${tmpContentWithTrim} ${href}`
 
-							if (curAttrs.indexOf('aria-label=') !== -1) {
+							if (curAttrs.includes('aria-label=')) {
 								const ariaLabel =
 									_optionalChain([/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g, 'access', _11 => _11.exec, 'call', _12 => _12(
 										curAttrs
@@ -146,10 +146,10 @@ const optimizeContent = (html, isFullOptimize = false) => {
 								.trim()
 
 							if (!tmpContentWithoutHTMLTags) return ''
-							if (curAttrs.indexOf('type=') === -1)
+							if (!curAttrs.includes('type='))
 								newAttrs = `type="button" ${newAttrs}`
 
-							if (curAttrs.indexOf('aria-label=') !== -1) {
+							if (curAttrs.includes('aria-label=')) {
 								const ariaLabel =
 									_optionalChain([/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g, 'access', _15 => _15.exec, 'call', _16 => _16(
 										curAttrs
@@ -191,4 +191,7 @@ const optimizeContent = (html, isFullOptimize = false) => {
 _workerpool2.default.worker({
 	compressContent,
 	optimizeContent,
+	finish: () => {
+		return 'finish'
+	},
 })

@@ -119,11 +119,13 @@ const get = async (
 	}
 } // get
 
-const set = async ({
-	html,
-	url,
-	isRaw = false,
-}) => {
+const set = async (
+	{ html, url, isRaw } = {
+		html: '',
+		url: '',
+		isRaw: false,
+	}
+) => {
 	const key = _utils.getKey.call(void 0, url)
 
 	if (!html) {
@@ -228,4 +230,7 @@ _workerpool2.default.worker({
 	set,
 	renew,
 	remove,
+	finish: () => {
+		return 'finish'
+	},
 })

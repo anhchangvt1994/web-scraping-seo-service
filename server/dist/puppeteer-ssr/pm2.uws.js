@@ -12,8 +12,6 @@ const CLUSTER_INSTANCES =
 const CLUSTER_KILL_TIMEOUT =
 	_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 1600
 
-const distPath = _constants.resourceExtension === 'js' ? 'server/dist' : 'server/src'
-
 // connect to pm2 daemon
 _pm22.default.connect(false, (err) => {
 	const selfProcess = process
@@ -58,7 +56,7 @@ _pm22.default.connect(false, (err) => {
 			_pm22.default.start(
 				{
 					name: 'puppeteer-ssr',
-					script: `${distPath}/index.uws.${_constants.resourceExtension}`,
+					script: `server/${_constants.resourceDirectory}/index.uws.${_constants.resourceExtension}`,
 					instances: CLUSTER_INSTANCES,
 					exec_mode: 'cluster',
 					interpreter: './node_modules/.bin/sucrase',
@@ -76,8 +74,10 @@ _pm22.default.connect(false, (err) => {
 
 					const watcher = _chokidar2.default.watch(
 						[
-							_path2.default.resolve(__dirname, `../**/*.${_constants.resourceExtension}`),
-							// path.resolve(__dirname, `../utils/**/*.${resourceExtension}`),
+							_path2.default.resolve(
+								__dirname,
+								`../../${_constants.resourceDirectory}/**/*.${_constants.resourceExtension}`
+							),
 						],
 						{
 							ignored: /$^/,
