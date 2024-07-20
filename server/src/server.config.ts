@@ -19,4 +19,6 @@ const ServerConfig = defineServerConfig({
   },
 });
 
+console.log(ServerConfig);
+
 export default ServerConfig;

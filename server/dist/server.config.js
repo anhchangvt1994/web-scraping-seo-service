@@ -19,4 +19,6 @@ const ServerConfig = _ServerConfigHandler.defineServerConfig.call(void 0, {
   },
 });
 
+console.log(ServerConfig);
+
 exports. default = ServerConfig;
