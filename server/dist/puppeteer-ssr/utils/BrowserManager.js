@@ -65,6 +65,8 @@ const _getSafePage = (page) => {
 const BrowserManager = (
 	userDataDir = () => `${_constants.userDataPath}/user_data`
 ) => {
+	if (process.env.PUPPETEER_SKIP_DOWNLOAD && !_constants3.canUseLinuxChromium) return
+
 	const maxRequestPerBrowser = 20
 	let totalRequests = 0
 	let browserLaunch

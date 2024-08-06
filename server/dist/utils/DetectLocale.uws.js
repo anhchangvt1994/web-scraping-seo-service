@@ -1,5 +1,4 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _geoiplite = require('geoip-lite');
-
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { newObj[key] = obj[key]; } } } newObj.default = obj; return newObj; } } function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 
 
 
@@ -9,6 +8,16 @@ var _serverconfig = require('../server.config'); var _serverconfig2 = _interopRe
 
 var _CookieHandleruws = require('./CookieHandler.uws');
 
+
+let geoip
+;(async () => {
+	if (
+		['true', 'TRUE', '1'].includes(process.env.DISABLE_DETECT_LOCALE )
+	)
+		return
+
+	geoip = await Promise.resolve().then(() => _interopRequireWildcard(require('geoip-lite')))
+})()
 
 const LOCALE_INFO_DEFAULT = {
 	lang: _constants.LANGUAGE_CODE_DEFAULT,
@@ -31,13 +40,29 @@ const LOCALE_INFO_DEFAULT = {
 }
 
  function detectLocale(req) {
-	if (!req) return LOCALE_INFO_DEFAULT
+	if (
+		['true', 'TRUE', '1'].includes(
+			process.env.DISABLE_DETECT_LOCALE 
+		) ||
+		!geoip ||
+		!req
+	)
+		return {
+			...LOCALE_INFO_DEFAULT,
+			langSelected: _serverconfig2.default.locale.enable
+				? LOCALE_INFO_DEFAULT.langSelected
+				: '',
+			countrySelected: _serverconfig2.default.locale.enable
+				? LOCALE_INFO_DEFAULT.countrySelected
+				: '',
+		}
 
+	const { lookup } = geoip
 	const clientIp = (req.getHeader('x-forwarded-for') || '')
 		.toString()
 		.replace(/::ffff:|::1/, '')
 
-	const localInfo = _geoiplite.lookup.call(void 0, clientIp) || LOCALE_INFO_DEFAULT
+	const localInfo = lookup(clientIp) || LOCALE_INFO_DEFAULT
 
 	const acceptLanguage = req.getHeader('accept-language')
 	let clientLang = LOCALE_INFO_DEFAULT.lang

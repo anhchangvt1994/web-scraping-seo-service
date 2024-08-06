@@ -1,36 +1,35 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _path = require('path'); var _path2 = _interopRequireDefault(_path);
 
-const dotenv = require("dotenv");
+const dotenv = require('dotenv')
 
  const ENV = (
-  ["development", "production"].includes(process.env.ENV )
-    ? process.env.ENV
-    : "production"
-) ; exports.ENV = ENV;
+	['development', 'production'].includes(process.env.ENV )
+		? process.env.ENV
+		: 'production'
+) ; exports.ENV = ENV
  const MODE = (
-  ["development", "preview", "production"].includes(process.env.MODE )
-    ? process.env.MODE
-    : process.env.ENV === "development"
-    ? "development"
-    : "production"
-) ; exports.MODE = MODE;
+	['development', 'preview', 'production'].includes(process.env.MODE )
+		? process.env.MODE
+		: process.env.ENV === 'development'
+		? 'development'
+		: 'production'
+) ; exports.MODE = MODE
 
 const envModeList = {
-  // NOTE - This means you can debug staging and production in development environment
-  development_development: "development",
-  development_preview: "staging",
-  development_production: "production",
+	// NOTE - This means you can debug staging and production in development environment
+	development_development: 'development',
+	development_preview: 'staging',
+	development_production: 'production',
 
-  // NOTE - This means your final environment you need to deploy
-  production_development: "staging",
-  production_preview: "uat",
-  production_production: "production",
-};
+	// NOTE - This means your final environment you need to deploy
+	production_development: 'staging',
+	production_preview: 'uat',
+	production_production: 'production',
+}
  const ENV_MODE = envModeList[`${exports.ENV}_${exports.MODE}`] 
 
 
 
-; exports.ENV_MODE = ENV_MODE;
 
 
 
@@ -42,47 +41,48 @@ const envModeList = {
 
 
 
+; exports.ENV_MODE = ENV_MODE
 
  const PROCESS_ENV = (() => {
-  dotenv.config({
-    path: _path2.default.resolve(__dirname, "../../.env"),
-  });
+	dotenv.config({
+		path: _path2.default.resolve(__dirname, '../../.env'),
+	})
 
-  switch (exports.ENV_MODE) {
-    case "development":
-      break;
-    case "staging":
-      dotenv.config({
-        path: _path2.default.resolve(__dirname, "../../.env.staging"),
-        override: true,
-      });
-      break;
-    case "uat":
-      dotenv.config({
-        path: _path2.default.resolve(__dirname, "../../.env.uat"),
-        override: true,
-      });
-      break;
-    default:
-      dotenv.config({
-        path: _path2.default.resolve(__dirname, "../../.env.production"),
-        override: true,
-      });
-      break;
-  }
+	switch (exports.ENV_MODE) {
+		case 'development':
+			break
+		case 'staging':
+			dotenv.config({
+				path: _path2.default.resolve(__dirname, '../../.env.staging'),
+				override: true,
+			})
+			break
+		case 'uat':
+			dotenv.config({
+				path: _path2.default.resolve(__dirname, '../../.env.uat'),
+				override: true,
+			})
+			break
+		default:
+			dotenv.config({
+				path: _path2.default.resolve(__dirname, '../../.env.production'),
+				override: true,
+			})
+			break
+	}
 
-  const tmpProcessEnv = process.env ;
+	const tmpProcessEnv = process.env 
 
-  tmpProcessEnv.BUILD_TOOL = "";
-  tmpProcessEnv.RESET_RESOURCE = true;
+	tmpProcessEnv.BUILD_TOOL = 'vite'
+	tmpProcessEnv.RESET_RESOURCE = true
 
-  if (process.env.IS_REMOTE_CRAWLER !== undefined) {
-    tmpProcessEnv.IS_REMOTE_CRAWLER = ["false", "0", ""].includes(
-      process.env.IS_REMOTE_CRAWLER 
-    )
-      ? false
-      : true;
-  }
+	if (process.env.IS_REMOTE_CRAWLER !== undefined) {
+		tmpProcessEnv.IS_REMOTE_CRAWLER = ['false', '0', ''].includes(
+			process.env.IS_REMOTE_CRAWLER 
+		)
+			? false
+			: true
+	}
 
-  return tmpProcessEnv;
-})(); exports.PROCESS_ENV = PROCESS_ENV;
+	return tmpProcessEnv
+})(); exports.PROCESS_ENV = PROCESS_ENV

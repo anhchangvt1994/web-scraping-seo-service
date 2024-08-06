@@ -11,6 +11,11 @@ var _utils = require('../CacheManager/utils');
  const fetchData = async (
 	input,
 	init
+
+
+
+
+
 ) => {
 	if (!input) {
 		_ConsoleHandler2.default.error('URL is required!')
@@ -48,6 +53,7 @@ var _utils = require('../CacheManager/utils');
 				return {
 					status: res.status,
 					message: res.statusText,
+					cookies: res.headers.getSetCookie(),
 					data,
 				}
 			})

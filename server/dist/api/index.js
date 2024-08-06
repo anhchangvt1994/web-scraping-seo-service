@@ -268,6 +268,10 @@ const apiService = (async () => {
 				_FetchManager.refreshData.call(void 0, requestInfo.relativeCacheKey)
 			}
 
+			if (result.cookies && result.cookies.length) {
+				res.setHeader('Set-Cookie', result.cookies)
+			}
+
 			res.statusMessage = result.message || res.statusMessage
 
 			return res.status(result.status).send(data)

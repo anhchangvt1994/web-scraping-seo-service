@@ -1,24 +1,20 @@
-import { defineServerConfig } from "./utils/ServerConfigHandler";
+import { ENV_MODE } from './utils/InitEnv'
+import { defineServerConfig } from './utils/ServerConfigHandler'
 
 const ServerConfig = defineServerConfig({
-  locale: {
-    enable: true,
-    defaultLang: "vi",
-    defaultCountry: "vn",
-    routes: {
-      "/login": {
-        enable: false,
-      },
-    },
-  },
-  crawl: {
-    enable: true,
-    cache: {
-      enable: false,
-    },
-  },
-});
+	crawl: {
+		enable: true,
+		routes: {
+			'/login': {
+				enable: false,
+			},
+		},
+	},
+	api: {
+		list: {
+			'http://localhost:3000/api': 'XXX',
+		},
+	},
+})
 
-console.log(ServerConfig);
-
-export default ServerConfig;
+export default ServerConfig
