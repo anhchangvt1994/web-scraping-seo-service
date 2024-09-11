@@ -1,245 +1,391 @@
-import path from 'path'
 import {
-	BANDWIDTH_LEVEL,
-	BANDWIDTH_LEVEL_LIST,
-	POWER_LEVEL,
-	POWER_LEVEL_LIST,
-	SERVER_LESS,
-	resourceExtension,
-} from '../../constants'
-import ServerConfig from '../../server.config'
-import Console from '../../utils/ConsoleHandler'
-import { PROCESS_ENV } from '../../utils/InitEnv'
-import WorkerManager from '../../utils/WorkerManager'
-import { DISABLE_SSR_CACHE, DURATION_TIMEOUT } from '../constants'
-import { ISSRResult } from '../types'
-import CacheManager from './CacheManager'
-import ISRHandler from './ISRHandler'
-
-const workerManager = WorkerManager.init(
-	path.resolve(__dirname + `/OptimizeHtml.worker.${resourceExtension}`),
-	{ minWorkers: 1, maxWorkers: 4 },
-	['compressContent']
-)
-
-const fetchData = async (
-	input: RequestInfo | URL,
-	init?: RequestInit | undefined,
-	reqData?: { [key: string]: any }
-) => {
-	try {
-		const params = new URLSearchParams()
-		if (reqData) {
-			for (const key in reqData) {
-				params.append(key, reqData[key])
-			}
-		}
-
-		const response = await fetch(
-			input + (reqData ? `?${params.toString()}` : ''),
-			init
-		).then((res) => res.text())
-
-		const data = /^{(.|[\r\n])*?}$/.test(response) ? JSON.parse(response) : {}
-
-		return data
-	} catch (error) {
-		Console.error(error)
-	}
-} // fetchData
-
-const getRestOfDuration = (startGenerating, gapDuration = 0) => {
-	if (!startGenerating) return 0
-
-	return DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
-} // getRestOfDuration
+  BANDWIDTH_LEVEL,
+  BANDWIDTH_LEVEL_LIST,
+  SERVER_LESS,
+} from "../../constants";
+import ServerConfig from "../../server.config";
+import Console from "../../utils/ConsoleHandler";
+import { PROCESS_ENV } from "../../utils/InitEnv";
+import { DURATION_TIMEOUT } from "../constants";
+import { ISSRResult } from "../types";
+import CacheManager from "./CacheManager.worker";
+import ISRHandler from "./ISRHandler.worker";
 
 interface IISRGeneratorParams {
-	url: string
-	isSkipWaiting?: boolean
+  url: string;
+  forceToCrawl?: boolean;
+  isSkipWaiting?: boolean;
 }
+
+const limitRequestToCrawl = 3;
+let totalRequestsToCrawl = 0;
+const waitingToCrawlList = new Map<string, IISRGeneratorParams>();
+const limitRequestWaitingToCrawl = 1;
+let totalRequestsWaitingToCrawl = 0;
+
+const getCertainLimitRequestToCrawl = (() => {
+  const limitRequestToCrawlIfHasWaitingToCrawl =
+    limitRequestToCrawl - limitRequestWaitingToCrawl;
+
+  return () => {
+    if (waitingToCrawlList.size) return limitRequestToCrawlIfHasWaitingToCrawl;
+
+    return limitRequestToCrawl;
+  };
+})(); // getCertainLimitRequestToCrawl
+
+const fetchData = async (
+  input: RequestInfo | URL,
+  init?: RequestInit | undefined,
+  reqData?: { [key: string]: any }
+) => {
+  try {
+    const params = new URLSearchParams();
+    if (reqData) {
+      for (const key in reqData) {
+        params.append(key, reqData[key]);
+      }
+    }
+
+    const response = await fetch(
+      input + (reqData ? `?${params.toString()}` : ""),
+      init
+    ).then((res) => res.text());
+
+    const data = /^{(.|[\r\n])*?}$/.test(response) ? JSON.parse(response) : {};
+
+    return data;
+  } catch (error) {
+    Console.error(error);
+  }
+}; // fetchData
+
+const getRestOfDuration = (startGenerating, gapDuration = 0) => {
+  if (!startGenerating) return 0;
+
+  return DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating);
+}; // getRestOfDuration
 
 const SSRGenerator = async ({
-	isSkipWaiting = false,
-	...ISRHandlerParams
+  isSkipWaiting = false,
+  ...ISRHandlerParams
 }: IISRGeneratorParams): Promise<ISSRResult> => {
-	const cacheManager = CacheManager(ISRHandlerParams.url)
+  const cacheManager = CacheManager(ISRHandlerParams.url);
+  if (!PROCESS_ENV.BASE_URL) {
+    Console.error("Missing base url!");
+    return;
+  }
 
-	if (!PROCESS_ENV.BASE_URL) {
-		Console.error('Missing base url!')
-		return
-	}
+  if (!ISRHandlerParams.url) {
+    Console.error("Missing scraping url!");
+    return;
+  }
 
-	if (!ISRHandlerParams.url) {
-		Console.error('Missing scraping url!')
-		return
-	}
+  const startGenerating = Date.now();
 
-	const startGenerating = Date.now()
+  if (SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.TWO)
+    fetchData(`${PROCESS_ENV.BASE_URL}/cleaner-service`, {
+      method: "POST",
+      headers: new Headers({
+        Authorization: "mtr-cleaner-service",
+        Accept: "application/json",
+      }),
+    });
 
-	if (SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.TWO)
-		fetchData(`${PROCESS_ENV.BASE_URL}/cleaner-service`, {
-			method: 'POST',
-			headers: new Headers({
-				Authorization: 'mtr-cleaner-service',
-				Accept: 'application/json',
-			}),
-		})
+  let result: ISSRResult;
+  result = await cacheManager.achieve();
 
-	let result: ISSRResult
-	result = await cacheManager.achieve()
+  const certainLimitRequestToCrawl = getCertainLimitRequestToCrawl();
 
-	if (result) {
-		const NonNullableResult = result
-		const pathname = new URL(ISRHandlerParams.url).pathname
-		const renewTime =
-			(ServerConfig.crawl.routes[pathname]?.cache.renewTime ||
-				ServerConfig.crawl.custom?.(pathname)?.cache.renewTime ||
-				ServerConfig.crawl.cache.renewTime) * 1000
+  // console.log(result)
+  // console.log('certainLimitRequestToCrawl: ', certainLimitRequestToCrawl)
+  // console.log('totalRequestsToCrawl: ', totalRequestsToCrawl)
+  // console.log('totalRequestsWaitingToCrawl: ', totalRequestsWaitingToCrawl)
 
-		if (
-			Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
-			renewTime
-		) {
-			cacheManager.renew().then((result) => {
-				if (!result.hasRenew)
-					if (SERVER_LESS)
-						fetchData(
-							`${PROCESS_ENV.BASE_URL}/web-scraping`,
-							{
-								method: 'GET',
-								headers: new Headers({
-									Authorization: 'web-scraping-service',
-									Accept: 'application/json',
-									service: 'web-scraping-service',
-								}),
-							},
-							{
-								startGenerating,
-								hasCache: NonNullableResult.available,
-								url: ISRHandlerParams.url,
-							}
-						)
-					else
-						ISRHandler({
-							startGenerating,
-							hasCache: NonNullableResult.available,
-							...ISRHandlerParams,
-						})
-			})
-		}
-	} else {
-		result = await cacheManager.get()
+  if (result) {
+    const NonNullableResult = result;
+    const pathname = new URL(ISRHandlerParams.url).pathname;
+    const renewTime =
+      (ServerConfig.crawl.routes[pathname]?.cache.renewTime ||
+        ServerConfig.crawl.custom?.(pathname)?.cache.renewTime ||
+        ServerConfig.crawl.cache.renewTime) * 1000;
 
-		Console.log('Check for condition to create new page.')
-		Console.log('result.available', result?.available)
+    if (
+      Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
+      renewTime
+    ) {
+      cacheManager.renew().then((hasRenew) => {
+        if (
+          !hasRenew &&
+          (totalRequestsToCrawl < certainLimitRequestToCrawl ||
+            ISRHandlerParams.forceToCrawl)
+        ) {
+          if (!ISRHandlerParams.forceToCrawl) {
+            totalRequestsToCrawl++;
+          }
 
-		if (result) {
-			const NonNullableResult = result
-			const isValidToScraping = NonNullableResult.isInit
+          if (waitingToCrawlList.has(ISRHandlerParams.url)) {
+            waitingToCrawlList.delete(ISRHandlerParams.url);
+          }
 
-			if (isValidToScraping) {
-				const tmpResult: ISSRResult = await new Promise(async (res) => {
-					const handle = (() => {
-						if (SERVER_LESS)
-							return fetchData(
-								`${PROCESS_ENV.BASE_URL}/web-scraping`,
-								{
-									method: 'GET',
-									headers: new Headers({
-										Authorization: 'web-scraping-service',
-										Accept: 'application/json',
-										service: 'web-scraping-service',
-									}),
-								},
-								{
-									startGenerating,
-									hasCache: NonNullableResult.available,
-									url: ISRHandlerParams.url,
-								}
-							)
-						else
-							return ISRHandler({
-								startGenerating,
-								hasCache: NonNullableResult.available,
-								...ISRHandlerParams,
-							})
-					})()
+          if (SERVER_LESS)
+            fetchData(
+              `${PROCESS_ENV.BASE_URL}/web-scraping`,
+              {
+                method: "GET",
+                headers: new Headers({
+                  Authorization: "web-scraping-service",
+                  Accept: "application/json",
+                  service: "web-scraping-service",
+                }),
+              },
+              {
+                startGenerating,
+                hasCache: NonNullableResult.available,
+                url: ISRHandlerParams.url,
+              }
+            ).finally(() => {
+              if (ISRHandlerParams.forceToCrawl) {
+                totalRequestsWaitingToCrawl--;
+              } else {
+                totalRequestsToCrawl =
+                  totalRequestsToCrawl > certainLimitRequestToCrawl
+                    ? totalRequestsToCrawl - certainLimitRequestToCrawl - 1
+                    : totalRequestsToCrawl - 1;
+              }
 
-					if (isSkipWaiting) return res(undefined)
-					else
-						setTimeout(
-							res,
-							SERVER_LESS
-								? 5000
-								: BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE
-								? 60000
-								: 60000
-						)
+              if (
+                waitingToCrawlList.size &&
+                totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
+              ) {
+                totalRequestsWaitingToCrawl++;
+                const nextCrawlItem = waitingToCrawlList.values().next().value;
+                waitingToCrawlList.delete(nextCrawlItem.url);
 
-					const result = await (async () => {
-						return await handle
-					})()
+                SSRGenerator({
+                  isSkipWaiting: true,
+                  forceToCrawl: true,
+                  ...nextCrawlItem,
+                });
+              }
+            });
+          else
+            ISRHandler({
+              startGenerating,
+              hasCache: NonNullableResult.available,
+              ...ISRHandlerParams,
+            }).finally(() => {
+              if (ISRHandlerParams.forceToCrawl) {
+                totalRequestsWaitingToCrawl--;
+              } else {
+                totalRequestsToCrawl =
+                  totalRequestsToCrawl > certainLimitRequestToCrawl
+                    ? totalRequestsToCrawl - certainLimitRequestToCrawl - 1
+                    : totalRequestsToCrawl - 1;
+              }
 
-					res(result)
-				})
+              if (
+                waitingToCrawlList.size &&
+                totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
+              ) {
+                totalRequestsWaitingToCrawl++;
+                const nextCrawlItem = waitingToCrawlList.values().next().value;
+                waitingToCrawlList.delete(nextCrawlItem.url);
 
-				if (tmpResult && tmpResult.status) result = tmpResult
-				else {
-					const tmpResult = await cacheManager.achieve()
-					result = tmpResult || result
-				}
+                SSRGenerator({
+                  isSkipWaiting: true,
+                  forceToCrawl: true,
+                  ...nextCrawlItem,
+                });
+              }
+            });
+        } else if (!waitingToCrawlList.has(ISRHandlerParams.url)) {
+          waitingToCrawlList.set(ISRHandlerParams.url, ISRHandlerParams);
+        }
+      });
 
-				if (result.html && result.status === 200 && DISABLE_SSR_CACHE) {
-					const freePool = workerManager.getFreePool()
-					const pool = freePool.pool
-					let tmpHTML = result.html
+      result = await cacheManager.achieve();
+    }
+  } else if (
+    totalRequestsToCrawl < certainLimitRequestToCrawl ||
+    ISRHandlerParams.forceToCrawl
+  ) {
+    if (!ISRHandlerParams.forceToCrawl) {
+      totalRequestsToCrawl++;
+    }
+    result = await cacheManager.get();
 
-					try {
-						if (POWER_LEVEL === POWER_LEVEL_LIST.THREE)
-							tmpHTML = await pool.exec('compressContent', [tmpHTML])
-					} catch (err) {
-						tmpHTML = result.html
-						// Console.error(err)
-					} finally {
-						freePool.terminate()
-						result.html = tmpHTML
-					}
-				}
-			} else if (!isSkipWaiting) {
-				const restOfDuration = getRestOfDuration(startGenerating, 2000)
+    Console.log("Check for condition to create new page.");
+    Console.log("result.available", result?.available);
 
-				if (restOfDuration >= 500) {
-					let waitingDuration = 0
-					const followThisCache = (res) => {
-						const duration =
-							restOfDuration - waitingDuration < 200
-								? restOfDuration - waitingDuration
-								: 200
+    if (result) {
+      const NonNullableResult = result;
+      const isValidToScraping = NonNullableResult.isInit;
 
-						setTimeout(async () => {
-							const tmpResult = await cacheManager.achieve()
+      if (isValidToScraping) {
+        await cacheManager.remove(ISRHandlerParams.url);
+        cacheManager.get();
 
-							if (tmpResult && tmpResult.response) return res(tmpResult)
+        if (waitingToCrawlList.has(ISRHandlerParams.url)) {
+          waitingToCrawlList.delete(ISRHandlerParams.url);
+        }
 
-							waitingDuration += duration
+        const tmpResult: ISSRResult = await new Promise(async (res) => {
+          const handle = (() => {
+            if (SERVER_LESS)
+              return fetchData(
+                `${PROCESS_ENV.BASE_URL}/web-scraping`,
+                {
+                  method: "GET",
+                  headers: new Headers({
+                    Authorization: "web-scraping-service",
+                    Accept: "application/json",
+                    service: "web-scraping-service",
+                  }),
+                },
+                {
+                  startGenerating,
+                  hasCache: NonNullableResult.available,
+                  url: ISRHandlerParams.url,
+                }
+              ).finally(() => {
+                if (ISRHandlerParams.forceToCrawl) {
+                  totalRequestsWaitingToCrawl--;
+                } else {
+                  totalRequestsToCrawl =
+                    totalRequestsToCrawl > certainLimitRequestToCrawl
+                      ? totalRequestsToCrawl - certainLimitRequestToCrawl - 1
+                      : totalRequestsToCrawl - 1;
+                }
 
-							if (waitingDuration === restOfDuration) res(undefined)
-							else followThisCache(res)
-						}, duration)
-					} // followThisCache
+                if (
+                  waitingToCrawlList.size &&
+                  totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
+                ) {
+                  totalRequestsWaitingToCrawl++;
+                  const nextCrawlItem = waitingToCrawlList
+                    .values()
+                    .next().value;
+                  waitingToCrawlList.delete(nextCrawlItem.url);
 
-					const tmpResult = await new Promise<ISSRResult>((res) => {
-						followThisCache(res)
-					})
+                  SSRGenerator({
+                    isSkipWaiting: true,
+                    forceToCrawl: true,
+                    ...nextCrawlItem,
+                  });
+                }
+              });
+            else
+              return ISRHandler({
+                startGenerating,
+                hasCache: NonNullableResult.available,
+                ...ISRHandlerParams,
+              }).finally(() => {
+                if (ISRHandlerParams.forceToCrawl) {
+                  totalRequestsWaitingToCrawl--;
+                } else {
+                  totalRequestsToCrawl =
+                    totalRequestsToCrawl > certainLimitRequestToCrawl
+                      ? totalRequestsToCrawl - certainLimitRequestToCrawl - 1
+                      : totalRequestsToCrawl - 1;
+                }
 
-					if (tmpResult && tmpResult.response) result = tmpResult
-				}
-			}
-		}
-	}
+                if (
+                  waitingToCrawlList.size &&
+                  totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
+                ) {
+                  totalRequestsWaitingToCrawl++;
+                  const nextCrawlItem = waitingToCrawlList
+                    .values()
+                    .next().value;
+                  waitingToCrawlList.delete(nextCrawlItem.url);
 
-	return result
-}
+                  SSRGenerator({
+                    isSkipWaiting: true,
+                    forceToCrawl: true,
+                    ...nextCrawlItem,
+                  });
+                }
+              });
+          })();
 
-export default SSRGenerator
+          if (isSkipWaiting) return res(undefined);
+          else
+            setTimeout(
+              res,
+              SERVER_LESS
+                ? 5000
+                : BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE
+                ? 60000
+                : 60000
+            );
+
+          const result = await (async () => {
+            return await handle;
+          })();
+
+          res(result);
+        });
+
+        if (tmpResult && tmpResult.status) result = tmpResult;
+        else {
+          const tmpResult = await cacheManager.achieve();
+          result = tmpResult || result;
+        }
+      } else if (!isSkipWaiting) {
+        const restOfDuration = getRestOfDuration(startGenerating, 2000);
+
+        if (restOfDuration >= 500) {
+          let waitingDuration = 0;
+          const followThisCache = (res) => {
+            const duration =
+              restOfDuration - waitingDuration < 200
+                ? restOfDuration - waitingDuration
+                : 200;
+
+            setTimeout(async () => {
+              const tmpResult = await cacheManager.get();
+
+              if (tmpResult) {
+                if (tmpResult.response && tmpResult.status === 200)
+                  return res(tmpResult);
+                else if (tmpResult.isInit)
+                  res(
+                    await SSRGenerator({
+                      ...ISRHandlerParams,
+                      isSkipWaiting: false,
+                      forceToCrawl: true,
+                    })
+                  );
+              }
+
+              waitingDuration += duration;
+
+              if (waitingDuration === restOfDuration) res(undefined);
+              else followThisCache(res);
+            }, duration);
+          }; // followThisCache
+
+          const tmpResult = await new Promise<ISSRResult>((res) => {
+            followThisCache(res);
+          });
+
+          if (tmpResult && tmpResult.response) result = tmpResult;
+
+          if (!ISRHandlerParams.forceToCrawl) {
+            totalRequestsToCrawl =
+              totalRequestsToCrawl > certainLimitRequestToCrawl
+                ? totalRequestsToCrawl - certainLimitRequestToCrawl - 1
+                : totalRequestsToCrawl - 1;
+          }
+        }
+      }
+    }
+  } else if (!waitingToCrawlList.has(ISRHandlerParams.url)) {
+    waitingToCrawlList.set(ISRHandlerParams.url, ISRHandlerParams);
+  }
+
+  return result;
+};
+
+export default SSRGenerator;

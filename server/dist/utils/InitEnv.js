@@ -41,6 +41,9 @@ const envModeList = {
 
 
 
+
+
+
 ; exports.ENV_MODE = ENV_MODE
 
  const PROCESS_ENV = (() => {
@@ -71,9 +74,9 @@ const envModeList = {
 			break
 	}
 
-	const tmpProcessEnv = process.env 
+	const tmpProcessEnv = { ...(process.env ) }
 
-	tmpProcessEnv.BUILD_TOOL = 'vite'
+	tmpProcessEnv.BUILD_TOOL = 'webpack'
 	tmpProcessEnv.RESET_RESOURCE = true
 
 	if (process.env.IS_REMOTE_CRAWLER !== undefined) {
@@ -83,6 +86,25 @@ const envModeList = {
 			? false
 			: true
 	}
+	tmpProcessEnv.DISABLE_COMPRESS = Boolean(
+		process.env.DISABLE_COMPRESS === undefined
+			? false
+			: ['true', '1'].includes(
+					(process.env.DISABLE_COMPRESS || '').toLowerCase()
+			  )
+	)
+	tmpProcessEnv.DISABLE_DEEP_OPTIMIZE =
+		process.env.DISABLE_DEEP_OPTIMIZE === undefined
+			? false
+			: ['true', '1'].includes(
+					(process.env.DISABLE_DEEP_OPTIMIZE || '').toLowerCase()
+			  )
+	tmpProcessEnv.DISABLE_OPTIMIZE =
+		process.env.DISABLE_OPTIMIZE === undefined
+			? false
+			: ['true', '1'].includes(
+					(process.env.DISABLE_OPTIMIZE || '').toLowerCase()
+			  )
 
 	return tmpProcessEnv
 })(); exports.PROCESS_ENV = PROCESS_ENV

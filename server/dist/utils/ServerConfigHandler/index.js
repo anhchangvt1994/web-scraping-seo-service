@@ -1,5 +1,4 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
-var _InitEnv = require('../InitEnv');
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _InitEnv = require('../InitEnv');
 var _constants = require('./constants');
 
 
@@ -22,6 +21,7 @@ var _constants = require('./constants');
 						defaultCountry: tmpOptionCastingType.defaultCountry,
 						hideDefaultLocale: tmpOptionCastingType.hideDefaultLocale,
 						routes: tmpOptionCastingType.routes || {},
+						custom: tmpOptionCastingType.custom,
 					}
 
 					for (const localeRouteKey in serverConfigDefined[key].routes) {
@@ -81,6 +81,7 @@ var _constants = require('./constants');
 										_constants.defaultServerConfig[key].cache.renewTime,
 							  },
 					routes: tmpOptionCastingType.routes || {},
+					custom: tmpOptionCastingType.custom,
 				}
 
 				for (const localeRouteKey in serverConfigDefined[key].routes) {

@@ -39,6 +39,15 @@ var _serverconfig = require('./server.config'); var _serverconfig2 = _interopReq
 	  })()
 	: _path2.default.resolve(__dirname, './puppeteer-ssr/browsers'); exports.userDataPath = userDataPath
 
+ const workerManagerPath = _InitEnv.PROCESS_ENV.IS_SERVER
+	? (() => {
+			const tmpPath = '/tmp'
+			if (_fs2.default.existsSync(tmpPath)) return tmpPath + '/WorkerManager'
+
+			return _path2.default.resolve(__dirname, './utils/WorkerManager')
+	  })()
+	: _path2.default.resolve(__dirname, './puppeteer-ssr/browsers'); exports.workerManagerPath = workerManagerPath
+
  const resourceExtension = _InitEnv.PROCESS_ENV.IS_SERVER ? 'js' : 'ts'; exports.resourceExtension = resourceExtension
  const resourceDirectory = _InitEnv.PROCESS_ENV.IS_SERVER ? 'dist' : 'src'; exports.resourceDirectory = resourceDirectory
 

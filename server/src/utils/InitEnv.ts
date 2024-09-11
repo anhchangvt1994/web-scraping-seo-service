@@ -38,6 +38,9 @@ interface IProcessENV {
 	ADDRESS: string
 	IS_SERVER: string
 	IS_REMOTE_CRAWLER?: boolean
+	DISABLE_COMPRESS: boolean
+	DISABLE_OPTIMIZE: boolean
+	DISABLE_DEEP_OPTIMIZE: boolean
 	CRAWLER: string
 	CRAWLER_SECRET_KEY: string
 	[key: string]: string | boolean | undefined
@@ -71,9 +74,9 @@ export const PROCESS_ENV = (() => {
 			break
 	}
 
-	const tmpProcessEnv = process.env as IProcessENV
+	const tmpProcessEnv = { ...(process.env as IProcessENV) }
 
-	tmpProcessEnv.BUILD_TOOL = 'vite'
+	tmpProcessEnv.BUILD_TOOL = 'webpack'
 	tmpProcessEnv.RESET_RESOURCE = true
 
 	if (process.env.IS_REMOTE_CRAWLER !== undefined) {
@@ -83,6 +86,25 @@ export const PROCESS_ENV = (() => {
 			? false
 			: true
 	}
+	tmpProcessEnv.DISABLE_COMPRESS = Boolean(
+		process.env.DISABLE_COMPRESS === undefined
+			? false
+			: ['true', '1'].includes(
+					(process.env.DISABLE_COMPRESS || '').toLowerCase()
+			  )
+	)
+	tmpProcessEnv.DISABLE_DEEP_OPTIMIZE =
+		process.env.DISABLE_DEEP_OPTIMIZE === undefined
+			? false
+			: ['true', '1'].includes(
+					(process.env.DISABLE_DEEP_OPTIMIZE || '').toLowerCase()
+			  )
+	tmpProcessEnv.DISABLE_OPTIMIZE =
+		process.env.DISABLE_OPTIMIZE === undefined
+			? false
+			: ['true', '1'].includes(
+					(process.env.DISABLE_OPTIMIZE || '').toLowerCase()
+			  )
 
 	return tmpProcessEnv
 })()

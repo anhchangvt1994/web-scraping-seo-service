@@ -1,12 +1,8 @@
-"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
-var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
 var _path = require('path'); var _path2 = _interopRequireDefault(_path);
 var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
 
-
 var _zlib = require('zlib');
-var _constants = require('../../constants');
-
 var _ConsoleHandler = require('../ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
 var _utils = require('./utils');
 
@@ -20,7 +16,7 @@ var _utils = require('./utils');
 
 
 const deleteResource = (path) => {
-	return _utils.deleteResource.call(void 0, path, _workerpool2.default)
+	return _utils.deleteResource.call(void 0, path)
 } //  deleteResource
 
 const getFileInfo = async (file) => {
@@ -184,9 +180,7 @@ const scanToCleanBrowsers = async (
 
 					// NOTE - Remove without check pages
 					try {
-						await _optionalChain([_workerpool2.default, 'access', _ => _.pool, 'call', _2 => _2(
-							_path2.default.resolve(__dirname, `./index.${_constants.resourceExtension}`)
-						), 'optionalAccess', _3 => _3.exec, 'call', _4 => _4('deleteResource', [absolutePath])])
+						deleteResource(absolutePath)
 					} catch (err) {
 						_ConsoleHandler2.default.error(err)
 					} finally {
@@ -205,7 +199,10 @@ const scanToCleanBrowsers = async (
 	})
 } // scanToCleanBrowsers
 
-const scanToCleanPages = async (dirPath, durationValidToKeep = 1) => {
+const scanToCleanPages = async (
+	dirPath,
+	durationValidToKeep = 21600
+) => {
 	await new Promise(async (res) => {
 		if (_fs2.default.existsSync(dirPath)) {
 			let counter = 0
@@ -268,7 +265,7 @@ const scanToCleanAPIDataCache = async (dirPath) => {
 					if (!_fs2.default.existsSync(absolutePath)) continue
 					const fileInfo = await getFileInfo(absolutePath)
 
-					if (!_optionalChain([fileInfo, 'optionalAccess', _5 => _5.size])) continue
+					if (!_optionalChain([fileInfo, 'optionalAccess', _ => _.size])) continue
 
 					const fileContent = (() => {
 						const tmpContent = _fs2.default.readFileSync(absolutePath)
@@ -297,6 +294,7 @@ const scanToCleanAPIDataCache = async (dirPath) => {
 					}
 				}
 
+				if (timeout) clearTimeout(timeout)
 				timeout = setTimeout(() => {
 					resolve('complete')
 				}, 100)
@@ -335,9 +333,10 @@ const scanToCleanAPIStoreCache = async (dirPath) => {
 					if (!_fs2.default.existsSync(absolutePath)) continue
 					const fileInfo = await getFileInfo(absolutePath)
 
-					if (!_optionalChain([fileInfo, 'optionalAccess', _6 => _6.size])) continue
+					if (!_optionalChain([fileInfo, 'optionalAccess', _2 => _2.size])) continue
 
 					if (curTime - new Date(fileInfo.requestedAt).getTime() >= 300000) {
+						if (timeout) clearTimeout(timeout)
 						try {
 							_fs2.default.unlink(absolutePath, () => {})
 						} catch (err) {
@@ -350,6 +349,7 @@ const scanToCleanAPIStoreCache = async (dirPath) => {
 					}
 				}
 
+				if (timeout) clearTimeout(timeout)
 				timeout = setTimeout(() => {
 					resolve('complete')
 				}, 100)

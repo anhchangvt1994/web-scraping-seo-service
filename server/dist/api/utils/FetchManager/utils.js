@@ -42,9 +42,12 @@ var _utils = require('../CacheManager/utils');
 
 					if (!tmpData) {
 						const text = await res.clone().text()
-						tmpData = /^(\{|\[)(.|[\r\n])*?(\}|\])$/.test(text)
-							? JSON.parse(text)
-							: {}
+
+						try {
+							tmpData = JSON.parse(text)
+						} catch (error) {
+							tmpData = {}
+						}
 					} else JSON.parse(tmpData)
 
 					resolve(tmpData)
