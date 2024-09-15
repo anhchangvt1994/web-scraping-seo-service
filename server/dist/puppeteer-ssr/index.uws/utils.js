@@ -1,9 +1,14 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+var _fs = require('fs')
+var _fs2 = _interopRequireDefault(_fs)
 
-var _zlib = require('zlib');
-var _constants = require('../../constants');
-var _constants3 = require('../constants');
-
+var _zlib = require('zlib')
+var _constants = require('../../constants')
+var _constants3 = require('../constants')
 
 const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 
@@ -37,20 +42,14 @@ const _setCookie = (res) => {
 	return res
 } // _setCookie
 
- const handleResultAfterISRGenerator = (
-	res,
-	params
-
-
-
-
-) => {
+const handleResultAfterISRGenerator = (res, params) => {
 	const { result, enableContentEncoding, contentEncoding } = params
 
 	if (result) {
 		// Add Server-Timing! See https://w3c.github.io/server-timing/.
 		if (
-			(_constants3.CACHEABLE_STATUS_CODE[result.status] || result.status === 503) &&
+			(_constants3.CACHEABLE_STATUS_CODE[result.status] ||
+				result.status === 503) &&
 			result.response
 		) {
 			try {
@@ -66,13 +65,13 @@ const _setCookie = (res) => {
 								? _zlib.gzipSync.call(void 0, result.html)
 								: result.html
 							: (() => {
-									let tmpContent = _fs2.default.readFileSync(
-										result.response
-									)
+									let tmpContent = _fs2.default.readFileSync(result.response)
 
 									if (contentEncoding === 'br') return tmpContent
 									else if (tmpContent && Buffer.isBuffer(tmpContent))
-										tmpContent = _zlib.brotliDecompressSync.call(void 0, tmpContent).toString()
+										tmpContent = _zlib.brotliDecompressSync
+											.call(void 0, tmpContent)
+											.toString()
 
 									if (result.status === 200) {
 										if (contentEncoding === 'gzip')
@@ -85,7 +84,9 @@ const _setCookie = (res) => {
 						const content = _fs2.default.readFileSync(result.response)
 
 						if (content && Buffer.isBuffer(content)) {
-							tmpBody = _zlib.brotliDecompressSync.call(void 0, content).toString()
+							tmpBody = _zlib.brotliDecompressSync
+								.call(void 0, content)
+								.toString()
 						}
 					} else {
 						tmpBody = _fs2.default.readFileSync(result.response)
@@ -151,4 +152,5 @@ const _setCookie = (res) => {
 			.writeHeader('Content-Type', 'text/html; charset=utf-8')
 			.end('504 Gateway Timeout', true)
 	}
-}; exports.handleResultAfterISRGenerator = handleResultAfterISRGenerator
+}
+exports.handleResultAfterISRGenerator = handleResultAfterISRGenerator

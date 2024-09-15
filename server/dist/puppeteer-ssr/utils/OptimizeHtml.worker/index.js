@@ -1,8 +1,16 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _path = require('path'); var _path2 = _interopRequireDefault(_path);
-var _constants = require('../../../constants');
-var _ConsoleHandler = require('../../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
-var _WorkerManager = require('../../../utils/WorkerManager'); var _WorkerManager2 = _interopRequireDefault(_WorkerManager);
-var _InitEnv = require('../../../utils/InitEnv');
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
+var _constants = require('../../../constants')
+var _ConsoleHandler = require('../../../utils/ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _WorkerManager = require('../../../utils/WorkerManager')
+var _WorkerManager2 = _interopRequireDefault(_WorkerManager)
+var _InitEnv = require('../../../utils/InitEnv')
 
 const workerManager = _WorkerManager2.default.init(
 	_path2.default.resolve(__dirname, `./worker.${_constants.resourceExtension}`),
@@ -18,7 +26,7 @@ const workerManager = _WorkerManager2.default.init(
 	]
 )
 
- const compressContent = async (html) => {
+const compressContent = async (html) => {
 	if (!html || _InitEnv.PROCESS_ENV.DISABLE_COMPRESS) return html
 
 	const freePool = await workerManager.getFreePool({
@@ -47,12 +55,10 @@ const workerManager = _WorkerManager2.default.init(
 	})
 
 	return result
-}; exports.compressContent = compressContent // compressContent
+}
+exports.compressContent = compressContent // compressContent
 
- const optimizeContent = async (
-	html,
-	isFullOptimize = false
-) => {
+const optimizeContent = async (html, isFullOptimize = false) => {
 	if (!html || _InitEnv.PROCESS_ENV.DISABLE_OPTIMIZE) return html
 
 	const freePool = await workerManager.getFreePool({
@@ -84,9 +90,10 @@ const workerManager = _WorkerManager2.default.init(
 	})
 
 	return result
-}; exports.optimizeContent = optimizeContent // compressContent
+}
+exports.optimizeContent = optimizeContent // compressContent
 
- const shallowOptimizeContent = async (html) => {
+const shallowOptimizeContent = async (html) => {
 	if (!html || _InitEnv.PROCESS_ENV.DISABLE_OPTIMIZE) return html
 
 	const freePool = await workerManager.getFreePool({
@@ -115,12 +122,10 @@ const workerManager = _WorkerManager2.default.init(
 	})
 
 	return result
-}; exports.shallowOptimizeContent = shallowOptimizeContent // shallowOptimizeContent
+}
+exports.shallowOptimizeContent = shallowOptimizeContent // shallowOptimizeContent
 
- const deepOptimizeContent = async (
-	html,
-	isFullOptimize = false
-) => {
+const deepOptimizeContent = async (html, isFullOptimize = false) => {
 	if (!html || _InitEnv.PROCESS_ENV.DISABLE_DEEP_OPTIMIZE) return html
 
 	const freePool = await workerManager.getFreePool({
@@ -149,4 +154,5 @@ const workerManager = _WorkerManager2.default.init(
 	})
 
 	return result
-}; exports.deepOptimizeContent = deepOptimizeContent // compressContent
+}
+exports.deepOptimizeContent = deepOptimizeContent // compressContent

@@ -1,10 +1,43 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
-var _ConsoleHandler = require('../../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
-var _utils = require('../../utils/FetchManager/utils');
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+function _nullishCoalesce(lhs, rhsFn) {
+	if (lhs != null) {
+		return lhs
+	} else {
+		return rhsFn()
+	}
+}
+function _optionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
+var _ConsoleHandler = require('../../../utils/ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _utils = require('../../utils/FetchManager/utils')
 
-var _worker = require('./worker');
-var _InitEnv = require('../../../utils/InitEnv');
-var _constants = require('./constants');
+var _worker = require('./worker')
+var _InitEnv = require('../../../utils/InitEnv')
+var _constants = require('./constants')
 
 const limitRequest = 2
 let totalRequests = 0
@@ -47,7 +80,7 @@ const apiLighthouse = (() => {
 				res.writableEnded = true // disable to write
 			} else if (
 				!/^(https?:\/\/)?(www.)?([a-zA-Z0-9_-]+\.[a-zA-Z]{2,6})(\.[a-zA-Z]{2,6})?(\/.*)?$/.test(
-					urlParam 
+					urlParam
 				)
 			) {
 				res
@@ -64,10 +97,10 @@ const apiLighthouse = (() => {
 
 			if (!res.writableEnded) {
 				const params = new URLSearchParams()
-				params.append('urlTesting', urlParam )
+				params.append('urlTesting', urlParam)
 
 				const requestUrl =
-					((_InitEnv.PROCESS_ENV.BASE_URL ).includes('localhost')
+					(_InitEnv.PROCESS_ENV.BASE_URL.includes('localhost')
 						? _constants.TARGET_OPTIMAL_URL
 						: _InitEnv.PROCESS_ENV.BASE_URL) + `?${params.toString()}`
 
@@ -97,9 +130,11 @@ const apiLighthouse = (() => {
 				if (!res.writableEnded) {
 					const lighthouseResult = await Promise.all([
 						new Promise((res) => {
-							_utils.fetchData.call(void 0, 
-								`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${urlParam}&strategy=mobile&category=ACCESSIBILITY&category=BEST_PRACTICES&category=PERFORMANCE&category=SEO`
-							)
+							_utils.fetchData
+								.call(
+									void 0,
+									`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${urlParam}&strategy=mobile&category=ACCESSIBILITY&category=BEST_PRACTICES&category=PERFORMANCE&category=SEO`
+								)
 								.then((response) => {
 									if (response.status === 200) {
 										res(response.data.lighthouseResult)
@@ -110,9 +145,11 @@ const apiLighthouse = (() => {
 								.catch(() => res(undefined))
 						}),
 						new Promise((res) => {
-							_utils.fetchData.call(void 0, 
-								`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${requestUrl}&strategy=mobile&category=ACCESSIBILITY&category=BEST_PRACTICES&category=PERFORMANCE&category=SEO`
-							)
+							_utils.fetchData
+								.call(
+									void 0,
+									`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${requestUrl}&strategy=mobile&category=ACCESSIBILITY&category=BEST_PRACTICES&category=PERFORMANCE&category=SEO`
+								)
 								.then((response) => {
 									if (response.status === 200) {
 										res(response.data.lighthouseResult)
@@ -124,8 +161,8 @@ const apiLighthouse = (() => {
 						}),
 						// { pageSpeedUrl: '' },
 						// { pageSpeedUrl: '' },
-						_worker.getPageSpeedUrl.call(void 0, urlParam ),
-						_worker.getPageSpeedUrl.call(void 0, requestUrl ),
+						_worker.getPageSpeedUrl.call(void 0, urlParam),
+						_worker.getPageSpeedUrl.call(void 0, requestUrl),
 					])
 
 					const lighthouseResponse = await (async () => {
@@ -133,11 +170,29 @@ const apiLighthouse = (() => {
 						const tmpLighthouseResponse = {
 							image: '',
 							original: {
-								pageSpeedUrl: _nullishCoalesce(_optionalChain([lighthouseResult, 'access', _ => _[2], 'optionalAccess', _2 => _2.pageSpeedUrl]), () => ( '')),
+								pageSpeedUrl: _nullishCoalesce(
+									_optionalChain([
+										lighthouseResult,
+										'access',
+										(_) => _[2],
+										'optionalAccess',
+										(_2) => _2.pageSpeedUrl,
+									]),
+									() => ''
+								),
 								info: [],
 							},
 							optimal: {
-								pageSpeedUrl: _nullishCoalesce(_optionalChain([lighthouseResult, 'access', _3 => _3[3], 'optionalAccess', _4 => _4.pageSpeedUrl]), () => ( '')),
+								pageSpeedUrl: _nullishCoalesce(
+									_optionalChain([
+										lighthouseResult,
+										'access',
+										(_3) => _3[3],
+										'optionalAccess',
+										(_4) => _4.pageSpeedUrl,
+									]),
+									() => ''
+								),
 								info: [],
 							},
 						}
@@ -209,4 +264,4 @@ const apiLighthouse = (() => {
 	}
 })()
 
-exports. default = apiLighthouse
+exports.default = apiLighthouse

@@ -1,14 +1,17 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
-var _path = require('path'); var _path2 = _interopRequireDefault(_path);
-var _constants = require('../../../constants');
-var _ConsoleHandler = require('../../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
-var _WorkerManager = require('../../../utils/WorkerManager'); var _WorkerManager2 = _interopRequireDefault(_WorkerManager);
-
-
-
-
-
-
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+var _fs = require('fs')
+var _fs2 = _interopRequireDefault(_fs)
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
+var _constants = require('../../../constants')
+var _ConsoleHandler = require('../../../utils/ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _WorkerManager = require('../../../utils/WorkerManager')
+var _WorkerManager2 = _interopRequireDefault(_WorkerManager)
 
 const workerManager = _WorkerManager2.default.init(
 	_path2.default.resolve(__dirname, `./worker.${_constants.resourceExtension}`),
@@ -19,7 +22,7 @@ const workerManager = _WorkerManager2.default.init(
 	['get', 'set', 'remove', 'updateStatus']
 )
 
- const getData = async (key, options) => {
+const getData = async (key, options) => {
 	const freePool = await workerManager.getFreePool({
 		delay: 150,
 	})
@@ -41,21 +44,24 @@ const workerManager = _WorkerManager2.default.init(
 	})
 
 	return result
-}; exports.getData = getData // getData
+}
+exports.getData = getData // getData
 
- const getStore = async (
-	key,
-	options
-) => {
+const getStore = async (key, options) => {
 	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
 	let result
 
 	try {
-		result = await pool.exec('get', [_constants.storePath, key, 'json', options])
+		result = await pool.exec('get', [
+			_constants.storePath,
+			key,
+			'json',
+			options,
+		])
 
 		if (result && result.status === 200) {
-			const tmpData = _fs2.default.readFileSync(result.response) 
+			const tmpData = _fs2.default.readFileSync(result.response)
 			result.data = tmpData ? JSON.parse(tmpData) : tmpData
 		}
 	} catch (err) {
@@ -67,19 +73,22 @@ const workerManager = _WorkerManager2.default.init(
 	})
 
 	return result
-}; exports.getStore = getStore // getStore
+}
+exports.getStore = getStore // getStore
 
- const setData = async (
-	key,
-	content,
-	options
-) => {
+const setData = async (key, content, options) => {
 	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
 	let result
 
 	try {
-		result = await pool.exec('set', [_constants.dataPath, key, 'br', content, options])
+		result = await pool.exec('set', [
+			_constants.dataPath,
+			key,
+			'br',
+			content,
+			options,
+		])
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
 	}
@@ -89,9 +98,10 @@ const workerManager = _WorkerManager2.default.init(
 	})
 
 	return result
-}; exports.setData = setData // setData
+}
+exports.setData = setData // setData
 
- const setStore = async (key, content) => {
+const setStore = async (key, content) => {
 	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
 	let result
@@ -115,9 +125,10 @@ const workerManager = _WorkerManager2.default.init(
 	})
 
 	return result
-}; exports.setStore = setStore // setStore
+}
+exports.setStore = setStore // setStore
 
- const removeData = async (key) => {
+const removeData = async (key) => {
 	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
 	let result
@@ -133,9 +144,10 @@ const workerManager = _WorkerManager2.default.init(
 	})
 
 	return result
-}; exports.removeData = removeData // removeData
+}
+exports.removeData = removeData // removeData
 
- const removeStore = async (key) => {
+const removeStore = async (key) => {
 	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
 	let result
@@ -151,9 +163,10 @@ const workerManager = _WorkerManager2.default.init(
 	})
 
 	return result
-}; exports.removeStore = removeStore // removeStore
+}
+exports.removeStore = removeStore // removeStore
 
- const updateDataStatus = async (key, newStatus) => {
+const updateDataStatus = async (key, newStatus) => {
 	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
 
@@ -166,4 +179,5 @@ const workerManager = _WorkerManager2.default.init(
 	freePool.terminate({
 		force: true,
 	})
-}; exports.updateDataStatus = updateDataStatus // updateDataStatus
+}
+exports.updateDataStatus = updateDataStatus // updateDataStatus

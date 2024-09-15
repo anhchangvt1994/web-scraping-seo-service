@@ -1,16 +1,23 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true});
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
 
- const BrowserStore = {}; exports.BrowserStore = BrowserStore
- const HeadersStore = {}; exports.HeadersStore = HeadersStore
- const PromiseStore = {}; exports.PromiseStore = PromiseStore
- const APICacheStore = new Map(); exports.APICacheStore = APICacheStore
- const APIStoreStore = new Map(); exports.APIStoreStore = APIStoreStore
- const APIStore = {
+const BrowserStore = {}
+exports.BrowserStore = BrowserStore
+const HeadersStore = {}
+exports.HeadersStore = HeadersStore
+const PromiseStore = {}
+exports.PromiseStore = PromiseStore
+const APICacheStore = new Map()
+exports.APICacheStore = APICacheStore
+const APIStoreStore = new Map()
+exports.APIStoreStore = APIStoreStore
+const APIStore = {
 	cache: exports.APICacheStore,
 	store: exports.APIStoreStore,
-}; exports.APIStore = APIStore
+}
+exports.APIStore = APIStore
 
- const store = {
+const store = {
 	browser: exports.BrowserStore,
 	threadAdvanceInfo: {
 		order: 0,
@@ -19,13 +26,15 @@
 	headers: exports.HeadersStore,
 	promise: exports.PromiseStore,
 	api: exports.APIStore,
-}; exports.store = store
+}
+exports.store = store
 
- const getStoreList = () => {
+const getStoreList = () => {
 	return exports.store
-}; exports.getStoreList = getStoreList // getStoreList
+}
+exports.getStoreList = getStoreList // getStoreList
 
- const getStore = (key) => {
+const getStore = (key) => {
 	if (!key) return
 	if (
 		!exports.store[key] ||
@@ -35,11 +44,13 @@
 	)
 		return exports.store[key]
 
-	return exports.store[key] 
-}; exports.getStore = getStore // getStore
+	return exports.store[key]
+}
+exports.getStore = getStore // getStore
 
- const setStore = (key, value) => {
+const setStore = (key, value) => {
 	if (!key || !value) return
 
 	exports.store[key] = value
-}; exports.setStore = setStore // getStores
+}
+exports.setStore = setStore // getStores

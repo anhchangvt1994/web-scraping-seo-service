@@ -1,19 +1,39 @@
-"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
-var _path = require('path'); var _path2 = _interopRequireDefault(_path);
-var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
+'use strict'
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+function _optionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
+var _fs = require('fs')
+var _fs2 = _interopRequireDefault(_fs)
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
+var _workerpool = require('workerpool')
+var _workerpool2 = _interopRequireDefault(_workerpool)
 
-var _zlib = require('zlib');
-var _ConsoleHandler = require('../ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
-var _utils = require('./utils');
-
-
-
-
-
-
-
-
-
+var _zlib = require('zlib')
+var _ConsoleHandler = require('../ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _utils = require('./utils')
 
 const deleteResource = (path) => {
 	return _utils.deleteResource.call(void 0, path)
@@ -45,17 +65,7 @@ const getFileInfo = async (file) => {
 	return result
 } // getFileInfo
 
-
-
-
-
-
-
-
-const checkToCleanFile = async (
-	file,
-	{ schedule, validRequestAtDuration }
-) => {
+const checkToCleanFile = async (file, { schedule, validRequestAtDuration }) => {
 	if (!file) {
 		_ConsoleHandler2.default.error('Need provide "file" to delete!')
 		return false
@@ -67,8 +77,7 @@ const checkToCleanFile = async (
 		file = _fs2.default.existsSync(file) ? file : file.replace('.raw', '')
 		if (_fs2.default.existsSync(file)) {
 			const info = await getFileInfo(file)
-			validRequestAtDuration =
-				validRequestAtDuration || (schedule ) / 2
+			validRequestAtDuration = validRequestAtDuration || schedule / 2
 
 			if (!info) {
 				// WorkerPool.pool().terminate()
@@ -98,7 +107,7 @@ const checkToCleanFile = async (
 		}
 	})
 
-	return result 
+	return result
 	// WorkerPool.pool().terminate()
 } // checkToCleanFile
 
@@ -134,7 +143,8 @@ const scanToCleanBrowsers = async (
 				}
 
 				const dirExistDurationInMinutes =
-					(Date.now() - new Date(_fs2.default.statSync(absolutePath).mtime).getTime()) /
+					(Date.now() -
+						new Date(_fs2.default.statSync(absolutePath).mtime).getTime()) /
 					60000
 
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
@@ -199,10 +209,7 @@ const scanToCleanBrowsers = async (
 	})
 } // scanToCleanBrowsers
 
-const scanToCleanPages = async (
-	dirPath,
-	durationValidToKeep = 21600
-) => {
+const scanToCleanPages = async (dirPath, durationValidToKeep = 21600) => {
 	await new Promise(async (res) => {
 		if (_fs2.default.existsSync(dirPath)) {
 			let counter = 0
@@ -213,7 +220,8 @@ const scanToCleanPages = async (
 			for (const file of pageList) {
 				const absolutePath = _path2.default.join(dirPath, file)
 				const dirExistDurationInMinutes =
-					(Date.now() - new Date(_fs2.default.statSync(absolutePath).atime).getTime()) /
+					(Date.now() -
+						new Date(_fs2.default.statSync(absolutePath).atime).getTime()) /
 					1000
 
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
@@ -265,12 +273,15 @@ const scanToCleanAPIDataCache = async (dirPath) => {
 					if (!_fs2.default.existsSync(absolutePath)) continue
 					const fileInfo = await getFileInfo(absolutePath)
 
-					if (!_optionalChain([fileInfo, 'optionalAccess', _ => _.size])) continue
+					if (!_optionalChain([fileInfo, 'optionalAccess', (_) => _.size]))
+						continue
 
 					const fileContent = (() => {
 						const tmpContent = _fs2.default.readFileSync(absolutePath)
 
-						return JSON.parse(_zlib.brotliDecompressSync.call(void 0, tmpContent).toString())
+						return JSON.parse(
+							_zlib.brotliDecompressSync.call(void 0, tmpContent).toString()
+						)
 					})()
 
 					const expiredTime = fileContent.cache
@@ -333,7 +344,8 @@ const scanToCleanAPIStoreCache = async (dirPath) => {
 					if (!_fs2.default.existsSync(absolutePath)) continue
 					const fileInfo = await getFileInfo(absolutePath)
 
-					if (!_optionalChain([fileInfo, 'optionalAccess', _2 => _2.size])) continue
+					if (!_optionalChain([fileInfo, 'optionalAccess', (_2) => _2.size]))
+						continue
 
 					if (curTime - new Date(fileInfo.requestedAt).getTime() >= 300000) {
 						if (timeout) clearTimeout(timeout)

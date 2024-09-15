@@ -1,29 +1,6 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true});
-var _constants = require('../constants');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+var _constants = require('../constants')
 
 const Console = (() => {
 	if (_constants.ENABLE_CONSOLE_DEBUGGER) return console
@@ -32,7 +9,7 @@ const Console = (() => {
 		consoleFormatted[key] = () => {}
 	}
 
-	return consoleFormatted 
+	return consoleFormatted
 })()
 
-exports. default = Console
+exports.default = Console

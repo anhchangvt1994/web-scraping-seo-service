@@ -1,31 +1,44 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _workerpool = require('workerpool'); var _workerpool2 = _interopRequireDefault(_workerpool);
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+function _optionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
+var _workerpool = require('workerpool')
+var _workerpool2 = _interopRequireDefault(_workerpool)
 
-var _constants = require('../../constants');
-var _ConsoleHandler = require('../ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
-var _FileHandler = require('../FileHandler');
+var _constants = require('../../constants')
+var _ConsoleHandler = require('../ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _FileHandler = require('../FileHandler')
 const { workerData } = require('worker_threads')
 
-
-
-
-
-
-
-
-
-
-
-
-
-const workerOrder = _optionalChain([workerData, 'optionalAccess', _ => _.order]) || 0
+const workerOrder =
+	_optionalChain([workerData, 'optionalAccess', (_) => _.order]) || 0
 
 const WorkerManager = (() => {
 	return {
-		init: (
-			workerPath,
-			options,
-			instanceTaskList
-		) => {
+		init: (workerPath, options, instanceTaskList) => {
 			const initOptions = {
 				minWorkers: 1,
 				maxWorkers: 1,
@@ -39,9 +52,6 @@ const WorkerManager = (() => {
 			let curPool = _workerpool2.default.pool(workerPath, initOptions)
 
 			let terminate
-
-
-
 
 			try {
 				if (instanceTaskList && instanceTaskList.length) {
@@ -64,11 +74,15 @@ const WorkerManager = (() => {
 					setTimeout(
 						() => {
 							tmpCounter = Number(
-								_FileHandler.getTextData.call(void 0, `${_constants.workerManagerPath}/counter.txt`) || 0
+								_FileHandler.getTextData.call(
+									void 0,
+									`${_constants.workerManagerPath}/counter.txt`
+								) || 0
 							)
 							tmpCounter++
 
-							_FileHandler.setTextData.call(void 0, 
+							_FileHandler.setTextData.call(
+								void 0,
 								`${_constants.workerManagerPath}/counter.txt`,
 								tmpCounter.toString()
 							)
@@ -89,11 +103,15 @@ const WorkerManager = (() => {
 					setTimeout(
 						() => {
 							tmpCounter = Number(
-								_FileHandler.getTextData.call(void 0, `${_constants.workerManagerPath}/counter.txt`) || 0
+								_FileHandler.getTextData.call(
+									void 0,
+									`${_constants.workerManagerPath}/counter.txt`
+								) || 0
 							)
 							tmpCounter = tmpCounter ? tmpCounter - 1 : 0
 
-							_FileHandler.setTextData.call(void 0, 
+							_FileHandler.setTextData.call(
+								void 0,
 								`${_constants.workerManagerPath}/counter.txt`,
 								tmpCounter.toString()
 							)
@@ -106,12 +124,7 @@ const WorkerManager = (() => {
 				return counter
 			} // _getCounterDecreased
 
-			const _getTerminate = (
-				pool
-			
-
-
-) => {
+			const _getTerminate = (pool) => {
 				let timeout
 				return {
 					run: (options) => {
@@ -154,9 +167,7 @@ const WorkerManager = (() => {
 
 			terminate = _getTerminate(curPool)
 
-			const _getFreePool
-
- = (() => {
+			const _getFreePool = (() => {
 				return async (options) => {
 					options = {
 						delay: 0,
@@ -166,7 +177,7 @@ const WorkerManager = (() => {
 					const counter = await _getCounterIncreased()
 
 					if (options.delay) {
-						const duration = (options.delay ) * (counter - 1)
+						const duration = options.delay * (counter - 1)
 
 						await new Promise((res) => setTimeout(res, duration))
 
@@ -189,4 +200,4 @@ const WorkerManager = (() => {
 	}
 })()
 
-exports. default = WorkerManager
+exports.default = WorkerManager

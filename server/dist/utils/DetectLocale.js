@@ -1,21 +1,59 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { newObj[key] = obj[key]; } } } newObj.default = obj; return newObj; } } function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireWildcard(obj) {
+	if (obj && obj.__esModule) {
+		return obj
+	} else {
+		var newObj = {}
+		if (obj != null) {
+			for (var key in obj) {
+				if (Object.prototype.hasOwnProperty.call(obj, key)) {
+					newObj[key] = obj[key]
+				}
+			}
+		}
+		newObj.default = obj
+		return newObj
+	}
+}
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+function _optionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
 
+var _constants = require('../constants')
+var _serverconfig = require('../server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
-
-
-var _constants = require('../constants');
-var _serverconfig = require('../server.config'); var _serverconfig2 = _interopRequireDefault(_serverconfig);
-
-var _CookieHandler = require('./CookieHandler');
+var _CookieHandler = require('./CookieHandler')
 
 let geoip
 ;(async () => {
-	if (
-		['true', 'TRUE', '1'].includes(process.env.DISABLE_DETECT_LOCALE )
-	)
-		return
+	if (['true', 'TRUE', '1'].includes(process.env.DISABLE_DETECT_LOCALE)) return
 
-	geoip = await Promise.resolve().then(() => _interopRequireWildcard(require('geoip-lite')))
+	geoip = await Promise.resolve().then(() =>
+		_interopRequireWildcard(require('geoip-lite'))
+	)
 })()
 
 const LOCALE_INFO_DEFAULT = {
@@ -38,11 +76,9 @@ const LOCALE_INFO_DEFAULT = {
 	area: 1000,
 }
 
- function detectLocale(req) {
+function detectLocale(req) {
 	if (
-		['true', 'TRUE', '1'].includes(
-			process.env.DISABLE_DETECT_LOCALE 
-		) ||
+		['true', 'TRUE', '1'].includes(process.env.DISABLE_DETECT_LOCALE) ||
 		!geoip ||
 		!req
 	)
@@ -118,7 +154,17 @@ const LOCALE_INFO_DEFAULT = {
 		})()
 	}
 
-	const defaultCountry = _optionalChain([_serverconfig2.default, 'access', _ => _.locale, 'access', _2 => _2.defaultCountry, 'optionalAccess', _3 => _3.toUpperCase, 'call', _4 => _4()])
+	const defaultCountry = _optionalChain([
+		_serverconfig2.default,
+		'access',
+		(_) => _.locale,
+		'access',
+		(_2) => _2.defaultCountry,
+		'optionalAccess',
+		(_3) => _3.toUpperCase,
+		'call',
+		(_4) => _4(),
+	])
 	const defaultLang = _serverconfig2.default.locale.defaultLang
 		? _serverconfig2.default.locale.defaultLang
 		: !defaultCountry
@@ -133,7 +179,17 @@ const LOCALE_INFO_DEFAULT = {
 
 	if (_serverconfig2.default.locale.enable) {
 		const cookies = _CookieHandler.getCookieFromRequest.call(void 0, req)
-		const path = _optionalChain([req, 'access', _5 => _5.url, 'optionalAccess', _6 => _6.split, 'optionalCall', _7 => _7('?'), 'access', _8 => _8[0]])
+		const path = _optionalChain([
+			req,
+			'access',
+			(_5) => _5.url,
+			'optionalAccess',
+			(_6) => _6.split,
+			'optionalCall',
+			(_7) => _7('?'),
+			'access',
+			(_8) => _8[0],
+		])
 
 		if (
 			_serverconfig2.default.locale.routes &&
@@ -166,15 +222,14 @@ const LOCALE_INFO_DEFAULT = {
 		countrySelected,
 		clientCountry,
 		clientLang,
-	} 
-} exports.default = detectLocale;
+	}
+}
+exports.default = detectLocale
 
 const _getArrLocaleSelected = (
 	firstDispatcherParam,
-	params
+	params,
 
-
-,
 	cookies
 ) => {
 	if (

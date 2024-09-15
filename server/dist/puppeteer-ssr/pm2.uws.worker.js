@@ -1,9 +1,17 @@
-"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _chokidar = require('chokidar'); var _chokidar2 = _interopRequireDefault(_chokidar);
-var _path = require('path'); var _path2 = _interopRequireDefault(_path);
-var _pm2 = require('pm2'); var _pm22 = _interopRequireDefault(_pm2);
-var _constants = require('../constants');
-var _ConsoleHandler = require('../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
-var _InitEnv = require('../utils/InitEnv');
+'use strict'
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+var _chokidar = require('chokidar')
+var _chokidar2 = _interopRequireDefault(_chokidar)
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
+var _pm2 = require('pm2')
+var _pm22 = _interopRequireDefault(_pm2)
+var _constants = require('../constants')
+var _ConsoleHandler = require('../utils/ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _InitEnv = require('../utils/InitEnv')
 
 const CLUSTER_INSTANCES =
 	_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES === 'max'
@@ -61,9 +69,13 @@ _pm22.default.connect(false, (err) => {
 					instances: CLUSTER_INSTANCES,
 					exec_mode: 'cluster',
 					interpreter:
-						_constants.resourceExtension === 'ts' ? './node_modules/.bin/sucrase' : 'node',
+						_constants.resourceExtension === 'ts'
+							? './node_modules/.bin/sucrase'
+							: 'node',
 					interpreter_args:
-						_constants.resourceExtension === 'ts' ? '--require sucrase/register' : '',
+						_constants.resourceExtension === 'ts'
+							? '--require sucrase/register'
+							: '',
 					wait_ready: true,
 					kill_timeout: CLUSTER_KILL_TIMEOUT,
 					cwd: '.',
