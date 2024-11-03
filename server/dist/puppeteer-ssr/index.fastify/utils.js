@@ -1,14 +1,16 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-var _fs = require('fs')
-var _fs2 = _interopRequireDefault(_fs)
-var _zlib = require('zlib')
-var _constants = require('../constants')
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+var _zlib = require('zlib');
+var _constants = require('../constants');
 
-const handleResultAfterISRGenerator = (res, params) => {
+
+ const handleResultAfterISRGenerator = (
+	res,
+	params
+
+
+
+
+) => {
 	if (!res) return
 	const { result, enableContentEncoding, contentEncoding } = params
 
@@ -34,8 +36,7 @@ const handleResultAfterISRGenerator = (res, params) => {
 	}
 
 	if (
-		(_constants.CACHEABLE_STATUS_CODE[result.status] ||
-			result.status === 503) &&
+		(_constants.CACHEABLE_STATUS_CODE[result.status] || result.status === 503) &&
 		result.response
 	) {
 		const body = (() => {
@@ -53,9 +54,7 @@ const handleResultAfterISRGenerator = (res, params) => {
 
 							if (contentEncoding === 'br') return tmpContent
 							else if (tmpContent && Buffer.isBuffer(tmpContent))
-								tmpContent = _zlib.brotliDecompressSync
-									.call(void 0, tmpContent)
-									.toString()
+								tmpContent = _zlib.brotliDecompressSync.call(void 0, tmpContent).toString()
 
 							if (result.status === 200) {
 								if (contentEncoding === 'gzip')
@@ -104,5 +103,4 @@ const handleResultAfterISRGenerator = (res, params) => {
 
 		res.send(body)
 	}
-}
-exports.handleResultAfterISRGenerator = handleResultAfterISRGenerator // handleResultAfterISRGenerator
+}; exports.handleResultAfterISRGenerator = handleResultAfterISRGenerator // handleResultAfterISRGenerator

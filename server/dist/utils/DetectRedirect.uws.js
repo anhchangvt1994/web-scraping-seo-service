@@ -1,10 +1,16 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
+"use strict";Object.defineProperty(exports, "__esModule", {value: true});
 
-var _redirectconfig = require('../app/redirect.config')
-var _InitEnv = require('./InitEnv')
 
-const DetectRedirect = (req, res) => {
+
+
+
+var _redirectconfig = require('../app/redirect.config');
+var _InitEnv = require('./InitEnv');
+
+const DetectRedirect
+
+
+ = (req, res) => {
 	const urlInfo = new URL(
 		`${_InitEnv.PROCESS_ENV.BASE_URL}${req.getUrl()}?${
 			req.getQuery() ? req.getQuery() : ''
@@ -29,10 +35,11 @@ const DetectRedirect = (req, res) => {
 		return redirectResult
 
 	const REDIRECT_INFO_FORMATTED = (() => {
-		if (!_redirectconfig.REDIRECT_INFO || !_redirectconfig.REDIRECT_INFO.length)
-			return []
+		if (!_redirectconfig.REDIRECT_INFO || !_redirectconfig.REDIRECT_INFO.length) return []
 
-		const tmpRedirectInfoFormatted = []
+		const tmpRedirectInfoFormatted
+
+ = []
 
 		for (const redirectInfoItem of _redirectconfig.REDIRECT_INFO) {
 			tmpRedirectInfoFormatted.push({
@@ -55,7 +62,8 @@ const DetectRedirect = (req, res) => {
 	redirectResult.path = (() => {
 		const query = urlInfo.searchParams
 
-		if (query.get('urlTesting')) return redirectResult.path
+		if (_InitEnv.PROCESS_ENV.ENABLE_URL_TESTING && query.get('urlTesting'))
+			return redirectResult.path
 
 		const redirectPath = /\/$/.test(redirectResult.path)
 			? redirectResult.path.slice(0, -1)
@@ -67,12 +75,7 @@ const DetectRedirect = (req, res) => {
 	if (redirectResult.path && redirectResult.path !== redirectResult.originPath)
 		redirectResult.status = 301
 
-	const redirectInjectionResult = _redirectconfig.REDIRECT_INJECTION.call(
-		void 0,
-		redirectResult,
-		req,
-		res
-	)
+	const redirectInjectionResult = _redirectconfig.REDIRECT_INJECTION.call(void 0, redirectResult, req, res)
 
 	if (redirectInjectionResult.status !== 200) {
 		redirectResult.status =
@@ -85,4 +88,4 @@ const DetectRedirect = (req, res) => {
 	return redirectResult
 }
 
-exports.default = DetectRedirect
+exports. default = DetectRedirect

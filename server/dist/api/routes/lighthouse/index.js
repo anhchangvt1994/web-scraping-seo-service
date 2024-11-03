@@ -1,15 +1,10 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-var _ConsoleHandler = require('../../../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _ConsoleHandler = require('../../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
 
-var _FetchManager = require('../../utils/FetchManager')
+var _FetchManager = require('../../utils/FetchManager');
 
-var _worker = require('./worker')
-var _constants = require('./constants')
+var _worker = require('./worker');
+var _constants = require('./constants');
 
 const apiLighthouse = (() => {
 	let _app
@@ -20,7 +15,9 @@ const apiLighthouse = (() => {
 				res.statusMessage = '`url` querystring params is required'
 				return res.status(400).send('`url` querystring params is required')
 			} else if (
-				!/^(https?:\/\/)[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$/.test(req.query.url)
+				!/^(https?:\/\/)[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$/.test(
+					req.query.url 
+				)
 			) {
 				res.statusMessage =
 					'`url` querystring params does not match the correct format'
@@ -30,7 +27,7 @@ const apiLighthouse = (() => {
 			}
 
 			const params = new URLSearchParams()
-			params.append('urlTesting', req.query.url)
+			params.append('urlTesting', req.query.url )
 
 			const requestUrl =
 				_constants.TARGET_OPTIMAL_URL.replace('http://', 'https://') +
@@ -51,12 +48,10 @@ const apiLighthouse = (() => {
 			}
 
 			const lighthouseResult = await Promise.all([
-				_worker.runPageSpeed.call(
-					void 0,
+				_worker.runPageSpeed.call(void 0, 
 					`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${req.query.url}&strategy=mobile&category=ACCESSIBILITY&category=BEST_PRACTICES&category=PERFORMANCE&category=SEO`
 				),
-				_worker.runPageSpeed.call(
-					void 0,
+				_worker.runPageSpeed.call(void 0, 
 					`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${requestUrl}&strategy=mobile&category=ACCESSIBILITY&category=BEST_PRACTICES&category=PERFORMANCE&category=SEO`
 				),
 			])
@@ -80,7 +75,9 @@ const apiLighthouse = (() => {
 				await Promise.all([
 					new Promise((res) => {
 						if (lighthouseResult[0] && lighthouseResult[0].categories) {
-							const categories = Object.values(lighthouseResult[0].categories)
+							const categories = Object.values(
+								lighthouseResult[0].categories
+							)
 
 							for (const category of categories) {
 								tmpLighthouseResponse.original.info.push({
@@ -96,7 +93,9 @@ const apiLighthouse = (() => {
 					}),
 					new Promise((res) => {
 						if (lighthouseResult[1] && lighthouseResult[1].categories) {
-							const categories = Object.values(lighthouseResult[1].categories)
+							const categories = Object.values(
+								lighthouseResult[1].categories
+							)
 
 							for (const category of categories) {
 								tmpLighthouseResponse.optimal.info.push({
@@ -121,12 +120,11 @@ const apiLighthouse = (() => {
 
 	return {
 		init(app) {
-			if (!app)
-				return _ConsoleHandler2.default.warn('You need provide express app!')
+			if (!app) return _ConsoleHandler2.default.warn('You need provide express app!')
 			_app = app
 			_allRequestHandler()
 		},
 	}
 })() // apiLighthouse
 
-exports.default = apiLighthouse
+exports. default = apiLighthouse

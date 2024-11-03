@@ -1,115 +1,127 @@
-import path from 'path'
-import { resourceExtension } from '../../../constants'
-import Console from '../../../utils/ConsoleHandler'
-import WorkerManager from '../../../utils/WorkerManager'
-import BrowserManager from '../BrowserManager'
-import CacheManager from '../CacheManager.worker/utils'
-import { type IISRHandlerWorkerParam } from './types'
-import ServerConfig from '../../../server.config'
-const { parentPort, isMainThread } = require('worker_threads')
+import path from "path";
+import { resourceExtension } from "../../../constants";
+import Console from "../../../utils/ConsoleHandler";
+import WorkerManager from "../../../utils/WorkerManager";
+import BrowserManager from "../BrowserManager";
+import CacheManager from "../CacheManager.worker/utils";
+import { type IISRHandlerWorkerParam } from "./types";
+import ServerConfig from "../../../server.config";
+import { PROCESS_ENV } from "../../../utils/InitEnv";
+const { parentPort, isMainThread } = require("worker_threads");
 
 const workerManager = WorkerManager.init(
-	path.resolve(__dirname, `./worker.${resourceExtension}`),
-	{
-		minWorkers: 1,
-		maxWorkers: 5,
-		enableGlobalCounter: !isMainThread,
-	},
-	['ISRHandler']
-)
+  path.resolve(__dirname, `./worker.${resourceExtension}`),
+  {
+    minWorkers: 1,
+    maxWorkers: 5,
+    enableGlobalCounter: !isMainThread,
+  },
+  ["ISRHandler"]
+);
 
-const browserManager = BrowserManager()
+const browserManager = BrowserManager();
 
 const ISRHandler = async (params: IISRHandlerWorkerParam) => {
-	if (!browserManager || !params.url) return
+  if (!browserManager || !params.url) return;
 
-	const browser = await browserManager.get()
+  const browser = await browserManager.get();
 
-	const wsEndpoint =
-		browser && browser.connected ? browser.wsEndpoint() : undefined
+  const wsEndpoint =
+    browser && browser.connected ? browser.wsEndpoint() : undefined;
 
-	if (!wsEndpoint && !ServerConfig.crawler) return
+  if (!wsEndpoint && !ServerConfig.crawler) return;
 
-	const freePool = await workerManager.getFreePool({
-		delay: 500,
-	})
+  const pathname = new URL(params.url).pathname;
 
-	const pool = freePool.pool
+  const crawlSpeedOption = (
+    ServerConfig.crawl.custom?.(params.url) ??
+    ServerConfig.crawl.routes[pathname] ??
+    ServerConfig.crawl
+  ).speed;
 
-	let result
-	const cacheManager = CacheManager(params.url)
+  const freePool = await workerManager.getFreePool({
+    delay: crawlSpeedOption / 20,
+  });
 
-	try {
-		result = await new Promise(async (res, rej) => {
-			let html
-			const timeout = setTimeout(async () => {
-				if (html) {
-					const tmpResult = await cacheManager.set({
-						html,
-						url: params.url,
-						isRaw: !params.hasCache,
-					})
+  const pool = freePool.pool;
 
-					res(tmpResult)
-				} else {
-					res(undefined)
-				}
-			}, 52000)
-			try {
-				const tmpResult = await pool.exec(
-					'ISRHandler',
-					[
-						{
-							...params,
-							wsEndpoint,
-						},
-					],
-					{
-						on: (payload) => {
-							if (!payload) return
-							if (
-								typeof payload === 'object' &&
-								payload.name === 'html' &&
-								payload.value
-							) {
-								html = payload.value
-							}
-						},
-					}
-				)
+  let result;
+  const cacheManager = CacheManager(params.url);
 
-				res(tmpResult)
-			} catch (err) {
-				rej(err)
-			} finally {
-				clearTimeout(timeout)
-			}
-		})
-	} catch (err) {
-		// clearTimeout(timeoutToCloseBrowserPage)
-		Console.error(err)
-	}
+  try {
+    result = await new Promise(async (res, rej) => {
+      let html;
+      const timeout = setTimeout(async () => {
+        if (html) {
+          const tmpResult = await cacheManager.set({
+            html,
+            url: params.url,
+            isRaw: !params.hasCache,
+          });
 
-	const url = params.url.split('?')[0]
-	browser?.emit('closePage', url)
-	if (!isMainThread) {
-		parentPort.postMessage({
-			name: 'closePage',
-			wsEndpoint,
-			url,
-		})
-	}
+          res(tmpResult);
+        } else {
+          res(undefined);
+        }
+      }, 52000);
+      try {
+        const tmpResult = await pool.exec(
+          "ISRHandler",
+          [
+            {
+              ...params,
+              baseUrl: PROCESS_ENV.BASE_URL,
+              wsEndpoint,
+            },
+          ],
+          {
+            on: (payload) => {
+              if (!payload) return;
+              if (
+                typeof payload === "object" &&
+                payload.name === "html" &&
+                payload.value
+              ) {
+                html = payload.value;
+              }
+            },
+          }
+        );
 
-	if (!result || result.status !== 200) {
-		cacheManager.remove(params.url)
-	}
+        res(tmpResult);
+      } catch (err) {
+        rej(err);
+      } finally {
+        clearTimeout(timeout);
+      }
+    });
+  } catch (err) {
+    // clearTimeout(timeoutToCloseBrowserPage)
+    Console.error(err);
+  }
 
-	freePool.terminate({
-		force: true,
-		// delay: 30000,
-	})
+  const url = params.url.split("?")[0];
+  browser?.emit("closePage", url);
+  if (!isMainThread) {
+    parentPort.postMessage({
+      name: "closePage",
+      wsEndpoint,
+      url,
+    });
+  }
 
-	return result
-} // getData
+  if (!result || result.status !== 200) {
+    cacheManager.remove(params.url).catch((err) => {
+      Console.error(err);
+    });
+  }
 
-export default ISRHandler
+  freePool.terminate({
+    force: true,
+    // delay: 30000,
+  });
+
+  return result;
+}; // getData
+
+export default ISRHandler;

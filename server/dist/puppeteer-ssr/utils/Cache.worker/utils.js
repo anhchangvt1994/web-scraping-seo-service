@@ -1,50 +1,32 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-function _nullishCoalesce(lhs, rhsFn) {
-	if (lhs != null) {
-		return lhs
-	} else {
-		return rhsFn()
-	}
-}
-function _optionalChain(ops) {
-	let lastAccessLHS = undefined
-	let value = ops[0]
-	let i = 1
-	while (i < ops.length) {
-		const op = ops[i]
-		const fn = ops[i + 1]
-		i += 2
-		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
-			return undefined
-		}
-		if (op === 'access' || op === 'optionalAccess') {
-			lastAccessLHS = value
-			value = fn(value)
-		} else if (op === 'call' || op === 'optionalCall') {
-			value = fn((...args) => value.call(lastAccessLHS, ...args))
-			lastAccessLHS = undefined
-		}
-	}
-	return value
-}
-var _fs = require('fs')
-var _fs2 = _interopRequireDefault(_fs)
-var _ConsoleHandler = require('../../../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _constants = require('../../../constants')
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
-var _zlib = require('zlib')
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _crypto = require('crypto'); var _crypto2 = _interopRequireDefault(_crypto);
+var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+var _path = require('path'); var _path2 = _interopRequireDefault(_path);
+var _zlib = require('zlib');
+var _ConsoleHandler = require('../../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
 
-var _CryptoHandler = require('../../../utils/CryptoHandler')
+var _PathHandler = require('../../../utils/PathHandler');
 
-if (!_fs2.default.existsSync(_constants.pagesPath)) {
+const pagesPath = _PathHandler.getPagesPath.call(void 0, )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if (!_fs2.default.existsSync(pagesPath)) {
 	try {
-		_fs2.default.mkdirSync(_constants.pagesPath)
+		_fs2.default.mkdirSync(pagesPath)
+		_fs2.default.mkdirSync(`${pagesPath}/info`)
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
 	}
@@ -52,29 +34,24 @@ if (!_fs2.default.existsSync(_constants.pagesPath)) {
 
 // export const regexKeyConverter =
 // 	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
-const regexKeyConverter =
-	/www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
-exports.regexKeyConverter = regexKeyConverter
+ const regexKeyConverter =
+	/www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g; exports.regexKeyConverter = regexKeyConverter
+ const regexKeyConverterWithoutLocaleInfo =
+	/www\.|botInfo=([^&]*)(?:\&)|localeInfo=([^&]*)(?:\&)|environmentInfo=([^&]*)/g; exports.regexKeyConverterWithoutLocaleInfo = regexKeyConverterWithoutLocaleInfo
 
-const getKey = (url) => {
-	if (!url) {
-		_ConsoleHandler2.default.error('Need provide "url" param!')
-		return
-	}
+ const getKey = (url) => {
+	if (!url) return
 
 	url = url
 		.replace('/?', '?')
-		.replace(exports.regexKeyConverter, '')
-		.replace(/\?(?:\&|)$/g, '')
+		.replace(exports.regexKeyConverterWithoutLocaleInfo, '')
+		.replace(/,"os":"([^&]*)"/, '')
+		.replace(/(\?|\&)$/, '')
 
-	const urlEncrypted = _CryptoHandler.encryptCrawlerKeyCache.call(void 0, url)
-	// const urlDecrypted = decryptCrawlerKeyCache(urlEncrypted)
+	return _crypto2.default.createHash('md5').update(url).digest('hex')
+}; exports.getKey = getKey // getKey
 
-	return urlEncrypted
-}
-exports.getKey = getKey // getKey
-
-const getFileInfo = async (file) => {
+ const getFileInfo = async (file) => {
 	if (!file) {
 		_ConsoleHandler2.default.error('Need provide "file" param!')
 		return
@@ -98,10 +75,9 @@ const getFileInfo = async (file) => {
 	})
 
 	return result
-}
-exports.getFileInfo = getFileInfo // getFileInfo
+}; exports.getFileInfo = getFileInfo // getFileInfo
 
-const setRequestTimeInfo = async (file, value) => {
+ const setRequestTimeInfo = async (file, value) => {
 	if (!file || !_fs2.default.existsSync(file)) {
 		_ConsoleHandler2.default.error('File does not exist!')
 		return
@@ -120,26 +96,26 @@ const setRequestTimeInfo = async (file, value) => {
 		const fd = _fs2.default.openSync(file, 'r')
 		_fs2.default.futimesSync(
 			fd,
-			value,
-			_nullishCoalesce(
-				_optionalChain([info, 'optionalAccess', (_) => _.updatedAt]),
-				() => new Date()
-			)
+			value ,
+			_nullishCoalesce(_optionalChain([info, 'optionalAccess', _ => _.updatedAt]), () => ( new Date()))
 		)
 		_fs2.default.close(fd)
 		_ConsoleHandler2.default.log('File access time updated.')
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
 	}
-}
-exports.setRequestTimeInfo = setRequestTimeInfo // setRequestTimeInfo
+}; exports.setRequestTimeInfo = setRequestTimeInfo // setRequestTimeInfo
 
-const maintainFile = _path2.default.resolve(
-	__dirname,
-	'../../../../maintain.html'
-)
+const maintainFile = _path2.default.resolve(__dirname, '../../../../maintain.html')
 
-const get = async (url, options) => {
+
+
+
+
+ const get = async (
+	url,
+	options
+) => {
 	options = options || {
 		autoCreateIfEmpty: true,
 	}
@@ -151,17 +127,17 @@ const get = async (url, options) => {
 
 	const key = exports.getKey.call(void 0, url)
 
-	let file = `${_constants.pagesPath}/${key}.br`
+	let file = `${pagesPath}/${key}.br`
 	let isRaw = false
 
 	switch (true) {
 		case _fs2.default.existsSync(file):
 			break
-		case _fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`):
-			file = `${_constants.pagesPath}/${key}.renew.br`
+		case _fs2.default.existsSync(`${pagesPath}/${key}.renew.br`):
+			file = `${pagesPath}/${key}.renew.br`
 			break
 		default:
-			file = `${_constants.pagesPath}/${key}.raw.br`
+			file = `${pagesPath}/${key}.raw.br`
 			isRaw = true
 			break
 	}
@@ -172,7 +148,17 @@ const get = async (url, options) => {
 		_ConsoleHandler2.default.log(`Create file ${file}`)
 
 		try {
-			_fs2.default.writeFileSync(file, '')
+			await Promise.all([
+				_fs2.default.writeFileSync(file, ''),
+				_fs2.default.writeFileSync(
+					`${pagesPath}/info/${key}.txt`,
+					url
+						.replace('/?', '?')
+						.replace(exports.regexKeyConverterWithoutLocaleInfo, '')
+						.replace(/,"os":"([^&]*)"/, '')
+						.replace(/(\?|\&)$/, '')
+				),
+			])
 			_ConsoleHandler2.default.log(`File ${key}.br has been created.`)
 
 			const curTime = new Date()
@@ -196,7 +182,7 @@ const get = async (url, options) => {
 					ttRenderMs: 200,
 					available: false,
 					isInit: true,
-				}
+				} 
 			}
 		}
 	}
@@ -211,29 +197,13 @@ const get = async (url, options) => {
 			file,
 			response: maintainFile,
 			status: 503,
-			createdAt: _nullishCoalesce(
-				_optionalChain([info, 'optionalAccess', (_2) => _2.createdAt]),
-				() => curTime
-			),
-			updatedAt: _nullishCoalesce(
-				_optionalChain([info, 'optionalAccess', (_3) => _3.updatedAt]),
-				() => curTime
-			),
-			requestedAt: _nullishCoalesce(
-				_optionalChain([info, 'optionalAccess', (_4) => _4.requestedAt]),
-				() => curTime
-			),
+			createdAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _2 => _2.createdAt]), () => ( curTime)),
+			updatedAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _3 => _3.updatedAt]), () => ( curTime)),
+			requestedAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _4 => _4.requestedAt]), () => ( curTime)),
 			ttRenderMs: 200,
 			available: false,
 			isInit:
-				Date.now() -
-					new Date(
-						_nullishCoalesce(
-							_optionalChain([info, 'optionalAccess', (_5) => _5.createdAt]),
-							() => curTime
-						)
-					).getTime() >=
-				53000,
+				Date.now() - new Date(_nullishCoalesce(_optionalChain([info, 'optionalAccess', _5 => _5.createdAt]), () => ( curTime))).getTime() >= 53000,
 			isRaw,
 		}
 	}
@@ -252,10 +222,9 @@ const get = async (url, options) => {
 		isInit: false,
 		isRaw,
 	}
-}
-exports.get = get // get
+}; exports.get = get // get
 
-const set = async (
+ const set = async (
 	{ html, url, isRaw } = {
 		html: '',
 		url: '',
@@ -269,22 +238,20 @@ const set = async (
 		return
 	}
 
-	const file = `${_constants.pagesPath}/${key}${isRaw ? '.raw' : ''}.br`
+	const file = `${pagesPath}/${key}${isRaw ? '.raw' : ''}.br`
 
 	if (!isRaw) {
-		if (_fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`))
+		if (_fs2.default.existsSync(`${pagesPath}/${key}.renew.br`))
 			try {
-				_fs2.default.renameSync(`${_constants.pagesPath}/${key}.renew.br`, file)
+				_fs2.default.renameSync(`${pagesPath}/${key}.renew.br`, file)
 			} catch (err) {
 				_ConsoleHandler2.default.error(err)
-				return
 			}
-		else if (_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.br`))
+		else if (_fs2.default.existsSync(`${pagesPath}/${key}.raw.br`))
 			try {
-				_fs2.default.renameSync(`${_constants.pagesPath}/${key}.raw.br`, file)
+				_fs2.default.renameSync(`${pagesPath}/${key}.raw.br`, file)
 			} catch (err) {
 				_ConsoleHandler2.default.error(err)
-				return
 			}
 	}
 
@@ -299,35 +266,34 @@ const set = async (
 			_ConsoleHandler2.default.log(`File ${file} was updated!`)
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
-			return
 		}
 	}
 
-	const result = (await exports.get.call(void 0, url, {
-		autoCreateIfEmpty: false,
-	})) || { html, status: 200 }
+	const result =
+		(await exports.get.call(void 0, url, {
+			autoCreateIfEmpty: false,
+		})) || ({ html, status: 200 } )
 
 	return result
-}
-exports.set = set // set
+}; exports.set = set // set
 
-const renew = async (url) => {
+ const renew = async (url) => {
 	if (!url) return _ConsoleHandler2.default.log('Url can not empty!')
 	const key = exports.getKey.call(void 0, url)
 	let hasRenew = true
 
-	const file = `${_constants.pagesPath}/${key}.renew.br`
+	const file = `${pagesPath}/${key}.renew.br`
 
 	if (!_fs2.default.existsSync(file)) {
 		hasRenew = false
 		const curFile = (() => {
-			let tmpCurFile = `${_constants.pagesPath}/${key}.br`
+			let tmpCurFile = `${pagesPath}/${key}.br`
 
 			switch (true) {
 				case _fs2.default.existsSync(tmpCurFile):
 					break
 				default:
-					tmpCurFile = `${_constants.pagesPath}/${key}.raw.br`
+					tmpCurFile = `${pagesPath}/${key}.raw.br`
 			}
 
 			return tmpCurFile
@@ -337,26 +303,24 @@ const renew = async (url) => {
 			_fs2.default.renameSync(curFile, file)
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
-			return
 		}
 	}
 
 	return hasRenew
-}
-exports.renew = renew // renew
+}; exports.renew = renew // renew
 
-const remove = (url) => {
+ const remove = async (url) => {
 	if (!url) return _ConsoleHandler2.default.log('Url can not empty!')
 	const key = exports.getKey.call(void 0, url)
 
 	const curFile = (() => {
 		switch (true) {
-			case _fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.br`):
-				return `${_constants.pagesPath}/${key}.raw.br`
-			case _fs2.default.existsSync(`${_constants.pagesPath}/${key}.br`):
-				return `${_constants.pagesPath}/${key}.br`
-			case _fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`):
-				return `${_constants.pagesPath}/${key}.renew.br`
+			case _fs2.default.existsSync(`${pagesPath}/${key}.raw.br`):
+				return `${pagesPath}/${key}.raw.br`
+			case _fs2.default.existsSync(`${pagesPath}/${key}.br`):
+				return `${pagesPath}/${key}.br`
+			case _fs2.default.existsSync(`${pagesPath}/${key}.renew.br`):
+				return `${pagesPath}/${key}.renew.br`
 			default:
 				return
 		}
@@ -365,32 +329,33 @@ const remove = (url) => {
 	if (!curFile) return
 
 	try {
-		_fs2.default.unlinkSync(curFile)
+		await Promise.all([
+			_fs2.default.unlinkSync(curFile),
+			_fs2.default.unlinkSync(`${pagesPath}/info/${key}.txt`),
+		])
 	} catch (err) {
-		console.error(err)
-		throw err
+		_ConsoleHandler2.default.error(err)
 	}
-}
-exports.remove = remove // remove
+}; exports.remove = remove // remove
 
-const rename = (params) => {
-	if (!params || !params.url)
-		return _ConsoleHandler2.default.log('Url can not empty!')
+ const rename = (params) => {
+	if (!params || !params.url) {
+		_ConsoleHandler2.default.log('Url can not empty!')
+		return
+	}
 
 	const key = exports.getKey.call(void 0, params.url)
-	const file = `${_constants.pagesPath}/${key}${
-		params.type ? '.' + params.type : ''
-	}.br`
+	const file = `${pagesPath}/${key}${params.type ? '.' + params.type : ''}.br`
 
 	if (!_fs2.default.existsSync(file)) {
 		const curFile = (() => {
 			switch (true) {
-				case _fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.br`):
-					return `${_constants.pagesPath}/${key}.raw.br`
-				case _fs2.default.existsSync(`${_constants.pagesPath}/${key}.br`):
-					return `${_constants.pagesPath}/${key}.br`
-				case _fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`):
-					return `${_constants.pagesPath}/${key}.renew.br`
+				case _fs2.default.existsSync(`${pagesPath}/${key}.raw.br`):
+					return `${pagesPath}/${key}.raw.br`
+				case _fs2.default.existsSync(`${pagesPath}/${key}.br`):
+					return `${pagesPath}/${key}.br`
+				case _fs2.default.existsSync(`${pagesPath}/${key}.renew.br`):
+					return `${pagesPath}/${key}.renew.br`
 				default:
 					return
 			}
@@ -402,13 +367,11 @@ const rename = (params) => {
 			_fs2.default.renameSync(curFile, file)
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
-			return
 		}
 	}
-}
-exports.rename = rename // rename
+}; exports.rename = rename // rename
 
-const isExist = (url) => {
+ const isExist = (url) => {
 	if (!url) {
 		_ConsoleHandler2.default.log('Url can not empty!')
 		return false
@@ -417,9 +380,28 @@ const isExist = (url) => {
 	const key = exports.getKey.call(void 0, url)
 
 	return (
-		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.br`) ||
-		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.br`) ||
-		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`)
+		_fs2.default.existsSync(`${pagesPath}/${key}.raw.br`) ||
+		_fs2.default.existsSync(`${pagesPath}/${key}.br`) ||
+		_fs2.default.existsSync(`${pagesPath}/${key}.renew.br`)
 	)
-}
-exports.isExist = isExist // isExist
+}; exports.isExist = isExist // isExist
+
+ const getStatus = (
+	url
+) => {
+	if (!url) {
+		_ConsoleHandler2.default.log('Url can not empty!')
+		return
+	}
+
+	const key = exports.getKey.call(void 0, url)
+
+	switch (true) {
+		case _fs2.default.existsSync(`${pagesPath}/${key}.raw.br`):
+			return 'raw'
+		case _fs2.default.existsSync(`${pagesPath}/${key}.renew.br`):
+			return 'renew'
+		default:
+			return 'ok'
+	}
+}; exports.getStatus = getStatus // getStatus

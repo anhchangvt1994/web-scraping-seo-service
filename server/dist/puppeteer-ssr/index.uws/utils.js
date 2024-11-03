@@ -1,14 +1,11 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-var _fs = require('fs')
-var _fs2 = _interopRequireDefault(_fs)
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
 
-var _zlib = require('zlib')
-var _constants = require('../../constants')
-var _constants3 = require('../constants')
+var _zlib = require('zlib');
+var _constants = require('../../constants');
+var _constants3 = require('../constants');
+
+var _ConsoleHandler = require('../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _InitEnv = require('../../utils/InitEnv');
 
 const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 
@@ -42,14 +39,20 @@ const _setCookie = (res) => {
 	return res
 } // _setCookie
 
-const handleResultAfterISRGenerator = (res, params) => {
+ const handleResultAfterISRGenerator = (
+	res,
+	params
+
+
+
+
+) => {
 	const { result, enableContentEncoding, contentEncoding } = params
 
 	if (result) {
 		// Add Server-Timing! See https://w3c.github.io/server-timing/.
 		if (
-			(_constants3.CACHEABLE_STATUS_CODE[result.status] ||
-				result.status === 503) &&
+			(_constants3.CACHEABLE_STATUS_CODE[result.status] || result.status === 503) &&
 			result.response
 		) {
 			try {
@@ -64,13 +67,13 @@ const handleResultAfterISRGenerator = (res, params) => {
 								? _zlib.gzipSync.call(void 0, result.html)
 								: result.html
 							: (() => {
-									let tmpContent = _fs2.default.readFileSync(result.response)
+									let tmpContent = _fs2.default.readFileSync(
+										result.response
+									)
 
 									if (contentEncoding === 'br') return tmpContent
 									else if (tmpContent && Buffer.isBuffer(tmpContent))
-										tmpContent = _zlib.brotliDecompressSync
-											.call(void 0, tmpContent)
-											.toString()
+										tmpContent = _zlib.brotliDecompressSync.call(void 0, tmpContent).toString()
 
 									if (result.status === 200) {
 										if (contentEncoding === 'gzip')
@@ -83,9 +86,7 @@ const handleResultAfterISRGenerator = (res, params) => {
 						const content = _fs2.default.readFileSync(result.response)
 
 						if (content && Buffer.isBuffer(content)) {
-							tmpBody = _zlib.brotliDecompressSync
-								.call(void 0, content)
-								.toString()
+							tmpBody = _zlib.brotliDecompressSync.call(void 0, content).toString()
 						}
 					} else {
 						tmpBody = _fs2.default.readFileSync(result.response)
@@ -153,5 +154,41 @@ const handleResultAfterISRGenerator = (res, params) => {
 			.writeHeader('Content-Type', 'text/html; charset=utf-8')
 			.end('504 Gateway Timeout', true)
 	}
-}
-exports.handleResultAfterISRGenerator = handleResultAfterISRGenerator
+}; exports.handleResultAfterISRGenerator = handleResultAfterISRGenerator // handleResultAfterISRGenerator
+
+ const handleInvalidUrl = (res, req) => {
+	if (!res) {
+		_ConsoleHandler2.default.log('Need provide `res` param!')
+		return
+	}
+
+	if (!req) {
+		_ConsoleHandler2.default.log('Need provide `req` param!')
+		return
+	}
+
+	const baseUrl = `${
+		req.getHeader('x-forwarded-proto')
+			? req.getHeader('x-forwarded-proto')
+			: _InitEnv.PROCESS_ENV.IS_SERVER
+			? 'https'
+			: 'http'
+	}://${req.getHeader('host')}`
+	const url = req.getUrl()
+	const urlLower = url.toLowerCase()
+
+	switch (true) {
+		case url.startsWith('/api') ||
+			/^https:\/\/([0-9]{1,3}\.){3}[0-9]{1,3}(?:(\:[0-9]{1,4})$|$)/.test(
+				baseUrl
+			) ||
+			/\/(wordpress|laravel|wp-includes|php|.env|server.config|[A-Za-z0-9-]+\.(yml))/.test(
+				urlLower
+			):
+			res.writableEnded = true
+			res.writeStatus('404').end('Not Found!', true)
+			break
+		default:
+			res.writableEnded = false
+	}
+}; exports.handleInvalidUrl = handleInvalidUrl // handleInvalidUrl

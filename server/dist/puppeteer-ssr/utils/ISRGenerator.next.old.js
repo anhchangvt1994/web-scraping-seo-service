@@ -1,42 +1,21 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-function _optionalChain(ops) {
-	let lastAccessLHS = undefined
-	let value = ops[0]
-	let i = 1
-	while (i < ops.length) {
-		const op = ops[i]
-		const fn = ops[i + 1]
-		i += 2
-		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
-			return undefined
-		}
-		if (op === 'access' || op === 'optionalAccess') {
-			lastAccessLHS = value
-			value = fn(value)
-		} else if (op === 'call' || op === 'optionalCall') {
-			value = fn((...args) => value.call(lastAccessLHS, ...args))
-			lastAccessLHS = undefined
-		}
-	}
-	return value
-}
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 
-var _constants = require('../../constants')
-var _serverconfig = require('../../server.config')
-var _serverconfig2 = _interopRequireDefault(_serverconfig)
-var _ConsoleHandler = require('../../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _InitEnv = require('../../utils/InitEnv')
-var _constants3 = require('../constants')
 
-var _CacheManagerworker = require('./CacheManager.worker')
-var _CacheManagerworker2 = _interopRequireDefault(_CacheManagerworker)
-var _ISRHandlerworker = require('./ISRHandler.worker')
-var _ISRHandlerworker2 = _interopRequireDefault(_ISRHandlerworker)
+
+var _constants = require('../../constants');
+var _serverconfig = require('../../server.config'); var _serverconfig2 = _interopRequireDefault(_serverconfig);
+var _ConsoleHandler = require('../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _InitEnv = require('../../utils/InitEnv');
+var _constants3 = require('../constants');
+
+var _CacheManagerworker = require('./CacheManager.worker'); var _CacheManagerworker2 = _interopRequireDefault(_CacheManagerworker);
+var _ISRHandlerworker = require('./ISRHandler.worker'); var _ISRHandlerworker2 = _interopRequireDefault(_ISRHandlerworker);
+
+
+
+
+
+
 
 const limitRequestToCrawl = 3
 let totalRequestsToCrawl = 0
@@ -55,7 +34,11 @@ const getCertainLimitRequestToCrawl = (() => {
 	}
 })() // getCertainLimitRequestToCrawl
 
-const fetchData = async (input, init, reqData) => {
+const fetchData = async (
+	input,
+	init,
+	reqData
+) => {
 	try {
 		const params = new URLSearchParams()
 		if (reqData) {
@@ -80,16 +63,14 @@ const fetchData = async (input, init, reqData) => {
 const getRestOfDuration = (startGenerating, gapDuration = 0) => {
 	if (!startGenerating) return 0
 
-	return (
-		_constants3.DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
-	)
+	return _constants3.DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
 } // getRestOfDuration
 
-const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
-	const cacheManager = _CacheManagerworker2.default.call(
-		void 0,
-		ISRHandlerParams.url
-	)
+const SSRGenerator = async ({
+	isSkipWaiting = false,
+	...ISRHandlerParams
+}) => {
+	const cacheManager = _CacheManagerworker2.default.call(void 0, ISRHandlerParams.url)
 	if (!_InitEnv.PROCESS_ENV.BASE_URL) {
 		_ConsoleHandler2.default.error('Missing base url!')
 		return
@@ -102,10 +83,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 
 	const startGenerating = Date.now()
 
-	if (
-		_constants.SERVER_LESS &&
-		_constants.BANDWIDTH_LEVEL === _constants.BANDWIDTH_LEVEL_LIST.TWO
-	)
+	if (_constants.SERVER_LESS && _constants.BANDWIDTH_LEVEL === _constants.BANDWIDTH_LEVEL_LIST.TWO)
 		fetchData(`${_InitEnv.PROCESS_ENV.BASE_URL}/cleaner-service`, {
 			method: 'POST',
 			headers: new Headers({
@@ -127,49 +105,11 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 	if (result) {
 		const NonNullableResult = result
 		const pathname = new URL(ISRHandlerParams.url).pathname
-		if (
-			_optionalChain([
-				_serverconfig2.default,
-				'access',
-				(_) => _.crawl,
-				'access',
-				(_2) => _2.routes,
-				'access',
-				(_3) => _3[pathname],
-				'optionalAccess',
-				(_4) => _4.cache,
-				'access',
-				(_5) => _5.renewTime,
-			]) !== 'infinite'
-		) {
+		if (_optionalChain([_serverconfig2.default, 'access', _ => _.crawl, 'access', _2 => _2.routes, 'access', _3 => _3[pathname], 'optionalAccess', _4 => _4.cache, 'access', _5 => _5.renewTime]) !== 'infinite') {
 			const renewTime =
-				(_optionalChain([
-					_serverconfig2.default,
-					'access',
-					(_6) => _6.crawl,
-					'access',
-					(_7) => _7.routes,
-					'access',
-					(_8) => _8[pathname],
-					'optionalAccess',
-					(_9) => _9.cache,
-					'access',
-					(_10) => _10.renewTime,
-				]) ||
-					_optionalChain([
-						_serverconfig2.default,
-						'access',
-						(_11) => _11.crawl,
-						'access',
-						(_12) => _12.custom,
-						'optionalCall',
-						(_13) => _13(pathname),
-						'optionalAccess',
-						(_14) => _14.cache,
-						'access',
-						(_15) => _15.renewTime,
-					]) ||
-					_serverconfig2.default.crawl.cache.renewTime) * 1000
+				((_optionalChain([_serverconfig2.default, 'access', _6 => _6.crawl, 'access', _7 => _7.routes, 'access', _8 => _8[pathname], 'optionalAccess', _9 => _9.cache, 'access', _10 => _10.renewTime]) ||
+					_optionalChain([_serverconfig2.default, 'access', _11 => _11.crawl, 'access', _12 => _12.custom, 'optionalCall', _13 => _13(ISRHandlerParams.url), 'optionalAccess', _14 => _14.cache, 'access', _15 => _15.renewTime]) ||
+					_serverconfig2.default.crawl.cache.renewTime) ) * 1000
 
 			if (
 				Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
@@ -238,41 +178,39 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 										}
 									})
 								else
-									_ISRHandlerworker2.default
-										.call(void 0, {
-											startGenerating,
-											hasCache: NonNullableResult.available,
-											...ISRHandlerParams,
-										})
-										.finally(() => {
-											if (ISRHandlerParams.forceToCrawl) {
-												totalRequestsWaitingToCrawl--
-											} else {
-												totalRequestsToCrawl =
-													totalRequestsToCrawl > certainLimitRequestToCrawl
-														? totalRequestsToCrawl -
-														  certainLimitRequestToCrawl -
-														  1
-														: totalRequestsToCrawl - 1
-											}
+									_ISRHandlerworker2.default.call(void 0, {
+										startGenerating,
+										hasCache: NonNullableResult.available,
+										...ISRHandlerParams,
+									}).finally(() => {
+										if (ISRHandlerParams.forceToCrawl) {
+											totalRequestsWaitingToCrawl--
+										} else {
+											totalRequestsToCrawl =
+												totalRequestsToCrawl > certainLimitRequestToCrawl
+													? totalRequestsToCrawl -
+													  certainLimitRequestToCrawl -
+													  1
+													: totalRequestsToCrawl - 1
+										}
 
-											if (
-												waitingToCrawlList.size &&
-												totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
-											) {
-												totalRequestsWaitingToCrawl++
-												const nextCrawlItem = waitingToCrawlList
-													.values()
-													.next().value
-												waitingToCrawlList.delete(nextCrawlItem.url)
+										if (
+											waitingToCrawlList.size &&
+											totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
+										) {
+											totalRequestsWaitingToCrawl++
+											const nextCrawlItem = waitingToCrawlList
+												.values()
+												.next().value
+											waitingToCrawlList.delete(nextCrawlItem.url)
 
-												SSRGenerator({
-													isSkipWaiting: true,
-													forceToCrawl: true,
-													...nextCrawlItem,
-												})
-											}
-										})
+											SSRGenerator({
+												isSkipWaiting: true,
+												forceToCrawl: true,
+												...nextCrawlItem,
+											})
+										}
+									})
 							} else if (!waitingToCrawlList.has(ISRHandlerParams.url)) {
 								waitingToCrawlList.set(ISRHandlerParams.url, ISRHandlerParams)
 							}
@@ -287,10 +225,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 		result = await cacheManager.get()
 
 		_ConsoleHandler2.default.log('Check for condition to create new page.')
-		_ConsoleHandler2.default.log(
-			'result.available',
-			_optionalChain([result, 'optionalAccess', (_16) => _16.available])
-		)
+		_ConsoleHandler2.default.log('result.available', _optionalChain([result, 'optionalAccess', _16 => _16.available]))
 
 		if (result) {
 			const NonNullableResult = result
@@ -303,7 +238,11 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 				) {
 					if (ISRHandlerParams.forceToCrawl) {
 						// NOTE - update create time
-						await cacheManager.remove(ISRHandlerParams.url)
+						try {
+							await cacheManager.remove(ISRHandlerParams.url)
+						} catch (err) {
+							_ConsoleHandler2.default.error(err)
+						}
 						cacheManager.get()
 					} else {
 						totalRequestsToCrawl++
@@ -359,41 +298,37 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 									}
 								})
 							else
-								return _ISRHandlerworker2.default
-									.call(void 0, {
-										startGenerating,
-										hasCache: NonNullableResult.available,
-										...ISRHandlerParams,
-									})
-									.finally(() => {
-										if (ISRHandlerParams.forceToCrawl) {
-											totalRequestsWaitingToCrawl--
-										} else {
-											totalRequestsToCrawl =
-												totalRequestsToCrawl > certainLimitRequestToCrawl
-													? totalRequestsToCrawl -
-													  certainLimitRequestToCrawl -
-													  1
-													: totalRequestsToCrawl - 1
-										}
+								return _ISRHandlerworker2.default.call(void 0, {
+									startGenerating,
+									hasCache: NonNullableResult.available,
+									...ISRHandlerParams,
+								}).finally(() => {
+									if (ISRHandlerParams.forceToCrawl) {
+										totalRequestsWaitingToCrawl--
+									} else {
+										totalRequestsToCrawl =
+											totalRequestsToCrawl > certainLimitRequestToCrawl
+												? totalRequestsToCrawl - certainLimitRequestToCrawl - 1
+												: totalRequestsToCrawl - 1
+									}
 
-										if (
-											waitingToCrawlList.size &&
-											totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
-										) {
-											totalRequestsWaitingToCrawl++
-											const nextCrawlItem = waitingToCrawlList
-												.values()
-												.next().value
-											waitingToCrawlList.delete(nextCrawlItem.url)
+									if (
+										waitingToCrawlList.size &&
+										totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
+									) {
+										totalRequestsWaitingToCrawl++
+										const nextCrawlItem = waitingToCrawlList
+											.values()
+											.next().value
+										waitingToCrawlList.delete(nextCrawlItem.url)
 
-											SSRGenerator({
-												isSkipWaiting: true,
-												forceToCrawl: true,
-												...nextCrawlItem,
-											})
-										}
-									})
+										SSRGenerator({
+											isSkipWaiting: true,
+											forceToCrawl: true,
+											...nextCrawlItem,
+										})
+									}
+								})
 						})()
 
 						if (isSkipWaiting) return res(undefined)
@@ -402,8 +337,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 								res,
 								_constants.SERVER_LESS
 									? 5000
-									: _constants.BANDWIDTH_LEVEL >
-									  _constants.BANDWIDTH_LEVEL_LIST.ONE
+									: _constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE
 									? 60000
 									: 60000
 							)
@@ -477,4 +411,4 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 	return result
 }
 
-exports.default = SSRGenerator
+exports. default = SSRGenerator

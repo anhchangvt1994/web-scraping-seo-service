@@ -1,58 +1,32 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-function _nullishCoalesce(lhs, rhsFn) {
-	if (lhs != null) {
-		return lhs
-	} else {
-		return rhsFn()
-	}
-}
-function _optionalChain(ops) {
-	let lastAccessLHS = undefined
-	let value = ops[0]
-	let i = 1
-	while (i < ops.length) {
-		const op = ops[i]
-		const fn = ops[i + 1]
-		i += 2
-		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
-			return undefined
-		}
-		if (op === 'access' || op === 'optionalAccess') {
-			lastAccessLHS = value
-			value = fn(value)
-		} else if (op === 'call' || op === 'optionalCall') {
-			value = fn((...args) => value.call(lastAccessLHS, ...args))
-			lastAccessLHS = undefined
-		}
-	}
-	return value
-}
-var _crypto = require('crypto')
-var _crypto2 = _interopRequireDefault(_crypto)
-var _fs = require('fs')
-var _fs2 = _interopRequireDefault(_fs)
-var _zlib = require('zlib')
-var _constants = require('../../../constants')
-var _ConsoleHandler = require('../../../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _crypto = require('crypto'); var _crypto2 = _interopRequireDefault(_crypto);
+var _fs = require('fs'); var _fs2 = _interopRequireDefault(_fs);
+var _zlib = require('zlib');
+var _ConsoleHandler = require('../../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _PathHandler = require('../../../utils/PathHandler');
 
-if (!_fs2.default.existsSync(_constants.dataPath)) {
-	_fs2.default.mkdirSync(_constants.dataPath)
+
+
+
+
+
+
+
+
+const dataPath = _PathHandler.getDataPath.call(void 0, )
+const storePath = _PathHandler.getStorePath.call(void 0, )
+
+if (!_fs2.default.existsSync(dataPath)) {
+	_fs2.default.mkdirSync(dataPath)
 }
 
-if (!_fs2.default.existsSync(_constants.storePath)) {
-	_fs2.default.mkdirSync(_constants.storePath)
+if (!_fs2.default.existsSync(storePath)) {
+	_fs2.default.mkdirSync(storePath)
 }
 
-const regexKeyConverter =
-	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
-exports.regexKeyConverter = regexKeyConverter
+ const regexKeyConverter =
+	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g; exports.regexKeyConverter = regexKeyConverter
 
-const getKey = (url) => {
+ const getKey = (url) => {
 	if (!url) {
 		_ConsoleHandler2.default.error('Need provide "url" param!')
 		return
@@ -63,10 +37,9 @@ const getKey = (url) => {
 		.replace(exports.regexKeyConverter, '')
 		.replace(/\?(?:\&|)$/g, '')
 	return _crypto2.default.createHash('md5').update(url).digest('hex')
-}
-exports.getKey = getKey // getKey
+}; exports.getKey = getKey // getKey
 
-const getFileInfo = async (file) => {
+ const getFileInfo = async (file) => {
 	if (!file) {
 		_ConsoleHandler2.default.error('Need provide "file" param!')
 		return
@@ -90,10 +63,9 @@ const getFileInfo = async (file) => {
 	})
 
 	return result
-}
-exports.getFileInfo = getFileInfo // getFileInfo
+}; exports.getFileInfo = getFileInfo // getFileInfo
 
-const setRequestTimeInfo = async (file, value) => {
+ const setRequestTimeInfo = async (file, value) => {
 	if (!file || !_fs2.default.existsSync(file)) {
 		_ConsoleHandler2.default.error('File does not exist!')
 		return
@@ -112,21 +84,21 @@ const setRequestTimeInfo = async (file, value) => {
 		const fd = _fs2.default.openSync(file, 'r')
 		_fs2.default.futimesSync(
 			fd,
-			value,
-			_nullishCoalesce(
-				_optionalChain([info, 'optionalAccess', (_) => _.updatedAt]),
-				() => new Date()
-			)
+			value ,
+			_nullishCoalesce(_optionalChain([info, 'optionalAccess', _ => _.updatedAt]), () => ( new Date()))
 		)
 		_fs2.default.close(fd)
 		_ConsoleHandler2.default.log('File access time updated.')
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
 	}
-}
-exports.setRequestTimeInfo = setRequestTimeInfo // setRequestTimeInfo
+}; exports.setRequestTimeInfo = setRequestTimeInfo // setRequestTimeInfo
 
-const getStatus = (directory, key, extension) => {
+ const getStatus = (
+	directory,
+	key,
+	extension
+) => {
 	switch (true) {
 		case _fs2.default.existsSync(`${directory}/${key}.${extension}`):
 			return 'ready'
@@ -135,10 +107,14 @@ const getStatus = (directory, key, extension) => {
 		default:
 			return
 	}
-}
-exports.getStatus = getStatus // getStatus
+}; exports.getStatus = getStatus // getStatus
 
-const updateStatus = (directory, key, extension, newStatus) => {
+ const updateStatus = (
+	directory,
+	key,
+	extension,
+	newStatus
+) => {
 	const status = exports.getStatus.call(void 0, directory, key, extension)
 
 	const file = `${directory}/${key}${
@@ -149,10 +125,14 @@ const updateStatus = (directory, key, extension, newStatus) => {
 	}.${extension}`
 
 	if (file !== newFile) _fs2.default.rename(file, newFile, () => {})
-}
-exports.updateStatus = updateStatus // updateStatus
+}; exports.updateStatus = updateStatus // updateStatus
 
-const get = async (directory, key, extension, options) => {
+ const get = async (
+	directory,
+	key,
+	extension,
+	options
+) => {
 	options = {
 		autoCreateIfEmpty: {
 			enable: false,
@@ -198,10 +178,8 @@ const get = async (directory, key, extension, options) => {
 				status: status || options.autoCreateIfEmpty.status,
 			}
 		} catch (err) {
-			if (err) {
-				_ConsoleHandler2.default.error(err)
-				return
-			}
+			_ConsoleHandler2.default.error(err)
+			return
 		}
 	}
 
@@ -212,18 +190,9 @@ const get = async (directory, key, extension, options) => {
 		const curTime = new Date()
 		_ConsoleHandler2.default.log(`File ${file} is empty`)
 		return {
-			createdAt: _nullishCoalesce(
-				_optionalChain([info, 'optionalAccess', (_2) => _2.createdAt]),
-				() => curTime
-			),
-			updatedAt: _nullishCoalesce(
-				_optionalChain([info, 'optionalAccess', (_3) => _3.updatedAt]),
-				() => curTime
-			),
-			requestedAt: _nullishCoalesce(
-				_optionalChain([info, 'optionalAccess', (_4) => _4.requestedAt]),
-				() => curTime
-			),
+			createdAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _2 => _2.createdAt]), () => ( curTime)),
+			updatedAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _3 => _3.updatedAt]), () => ( curTime)),
+			requestedAt: _nullishCoalesce(_optionalChain([info, 'optionalAccess', _4 => _4.requestedAt]), () => ( curTime)),
 			status: status || options.autoCreateIfEmpty.status,
 		}
 	}
@@ -234,12 +203,10 @@ const get = async (directory, key, extension, options) => {
 		let tmpContent = _fs2.default.readFileSync(file)
 
 		if (extension === 'br') {
-			tmpContent = _zlib.brotliDecompressSync
-				.call(void 0, tmpContent)
-				.toString()
+			tmpContent = _zlib.brotliDecompressSync.call(void 0, tmpContent).toString()
 		} else tmpContent = tmpContent.toString('utf8')
 
-		return JSON.parse(tmpContent)
+		return JSON.parse(tmpContent )
 	})()
 
 	const objContent =
@@ -256,10 +223,15 @@ const get = async (directory, key, extension, options) => {
 		status: status || options.autoCreateIfEmpty.status,
 		...objContent,
 	}
-}
-exports.get = get // get
+}; exports.get = get // get
 
-const set = async (directory, key, extension, content, options) => {
+ const set = async (
+	directory,
+	key,
+	extension,
+	content,
+	options
+) => {
 	if (!directory) {
 		_ConsoleHandler2.default.error('Need provide "directory" param')
 		return
@@ -332,12 +304,14 @@ const set = async (directory, key, extension, content, options) => {
 		})()
 
 	return result
-}
-exports.set = set // set
+}; exports.set = set // set
 
-const remove = (directory, key, extension) => {
-	if (!directory)
-		return _ConsoleHandler2.default.log('Key param can not empty!')
+ const remove = (
+	directory,
+	key,
+	extension
+) => {
+	if (!directory) return _ConsoleHandler2.default.log('Key param can not empty!')
 	if (!key) return _ConsoleHandler2.default.log('Key param can not empty!')
 
 	const status = exports.getStatus.call(void 0, directory, key, extension)
@@ -350,23 +324,15 @@ const remove = (directory, key, extension) => {
 	try {
 		_fs2.default.unlinkSync(file)
 	} catch (err) {
-		console.error(err)
-		throw err
+		_ConsoleHandler2.default.error(err)
 	}
-}
-exports.remove = remove // remove
+}; exports.remove = remove // remove
 
-const getData = async (key, options) => {
+ const getData = async (key, options) => {
 	let result
 
 	try {
-		result = await exports.get.call(
-			void 0,
-			_constants.dataPath,
-			key,
-			'br',
-			options
-		)
+		result = await exports.get.call(void 0, dataPath, key, 'br', options)
 
 		if (result && result.status === 200) {
 			result.data = _fs2.default.readFileSync(result.response)
@@ -376,23 +342,19 @@ const getData = async (key, options) => {
 	}
 
 	return result
-}
-exports.getData = getData // getData
+}; exports.getData = getData // getData
 
-const getStore = async (key, options) => {
+ const getStore = async (
+	key,
+	options
+) => {
 	let result
 
 	try {
-		result = await exports.get.call(
-			void 0,
-			_constants.storePath,
-			key,
-			'json',
-			options
-		)
+		result = await exports.get.call(void 0, storePath, key, 'json', options)
 
 		if (result && result.status === 200) {
-			const tmpData = _fs2.default.readFileSync(result.response)
+			const tmpData = _fs2.default.readFileSync(result.response) 
 			result.data = tmpData ? JSON.parse(tmpData) : tmpData
 		}
 	} catch (err) {
@@ -400,87 +362,66 @@ const getStore = async (key, options) => {
 	}
 
 	return result
-}
-exports.getStore = getStore // getStore
+}; exports.getStore = getStore // getStore
 
-const setData = async (key, content, options) => {
+ const setData = async (
+	key,
+	content,
+	options
+) => {
 	let result
 
 	try {
-		result = await exports.set.call(
-			void 0,
-			_constants.dataPath,
-			key,
-			'br',
-			content,
-			options
-		)
+		result = await exports.set.call(void 0, dataPath, key, 'br', content, options)
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
 	}
 
 	return result
-}
-exports.setData = setData // setData
+}; exports.setData = setData // setData
 
-const setStore = async (key, content) => {
+ const setStore = async (key, content) => {
 	let result
 
 	try {
-		result = await exports.set.call(
-			void 0,
-			_constants.storePath,
-			key,
-			'json',
-			content,
-			{
-				isCompress: false,
-			}
-		)
+		result = await exports.set.call(void 0, storePath, key, 'json', content, {
+			isCompress: false,
+		})
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
 	}
 
 	return result
-}
-exports.setStore = setStore // setStore
+}; exports.setStore = setStore // setStore
 
-const removeData = async (key) => {
+ const removeData = async (key) => {
 	let result
 
 	try {
-		result = await exports.remove.call(void 0, _constants.dataPath, key, 'br')
+		result = await exports.remove.call(void 0, dataPath, key, 'br')
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
 	}
 
 	return result
-}
-exports.removeData = removeData // removeData
+}; exports.removeData = removeData // removeData
 
-const removeStore = async (key) => {
+ const removeStore = async (key) => {
 	let result
 
 	try {
-		result = await exports.remove.call(
-			void 0,
-			_constants.storePath,
-			key,
-			'json'
-		)
+		result = await exports.remove.call(void 0, storePath, key, 'json')
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
 	}
 
 	return result
-}
-exports.removeStore = removeStore // removeStore
+}; exports.removeStore = removeStore // removeStore
 
-const updateDataStatus = async (key, newStatus) => {
+ const updateDataStatus = async (key, newStatus) => {
 	try {
-		exports.updateStatus.call(void 0, _constants.dataPath, key, 'br', newStatus)
+		exports.updateStatus.call(void 0, dataPath, key, 'br', newStatus)
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
 	}
-}
-exports.updateDataStatus = updateDataStatus // updateDataStatus
+}; exports.updateDataStatus = updateDataStatus // updateDataStatus

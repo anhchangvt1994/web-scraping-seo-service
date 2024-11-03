@@ -1,43 +1,27 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-function _optionalChain(ops) {
-	let lastAccessLHS = undefined
-	let value = ops[0]
-	let i = 1
-	while (i < ops.length) {
-		const op = ops[i]
-		const fn = ops[i + 1]
-		i += 2
-		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
-			return undefined
-		}
-		if (op === 'access' || op === 'optionalAccess') {
-			lastAccessLHS = value
-			value = fn(value)
-		} else if (op === 'call' || op === 'optionalCall') {
-			value = fn((...args) => value.call(lastAccessLHS, ...args))
-			lastAccessLHS = undefined
-		}
-	}
-	return value
-}
-var _chromiummin = require('@sparticuz/chromium-min')
-var _chromiummin2 = _interopRequireDefault(_chromiummin)
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _chromiummin = require('@sparticuz/chromium-min'); var _chromiummin2 = _interopRequireDefault(_chromiummin);
+var _path = require('path'); var _path2 = _interopRequireDefault(_path);
+var _constants = require('../../constants');
 
-var _constants = require('../../constants')
 
-var _constants3 = require('../../puppeteer-ssr/constants')
-var _store = require('../../store')
-var _ConsoleHandler = require('../ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _InitEnv = require('../InitEnv')
-var _WorkerManager = require('../WorkerManager')
-var _WorkerManager2 = _interopRequireDefault(_WorkerManager)
+
+var _constants3 = require('../../puppeteer-ssr/constants');
+var _store = require('../../store');
+var _ConsoleHandler = require('../ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _InitEnv = require('../InitEnv');
+
+
+
+
+
+
+var _PathHandler = require('../PathHandler');
+var _WorkerManager = require('../WorkerManager'); var _WorkerManager2 = _interopRequireDefault(_WorkerManager);
+
+const pagesPath = _PathHandler.getPagesPath.call(void 0, )
+const dataPath = _PathHandler.getDataPath.call(void 0, )
+const storePath = _PathHandler.getStorePath.call(void 0, )
+const userDataPath = _PathHandler.getUserDataPath.call(void 0, )
+const workerManagerPath = _PathHandler.getWorkerManagerPath.call(void 0, )
 
 const { isMainThread } = require('worker_threads')
 
@@ -46,7 +30,7 @@ const workerManager = (() => {
 	return _WorkerManager2.default.init(
 		_path2.default.resolve(
 			__dirname,
-			`./FollowResource.worker/index.${_constants.resourceExtension}`
+			`../FollowResource.worker/index.${_constants.resourceExtension}`
 		),
 		{
 			minWorkers: 1,
@@ -61,9 +45,15 @@ const workerManager = (() => {
 	)
 })()
 
-const cleanBrowsers = (() => {
+ const cleanBrowsers = (() => {
 	let executablePath
-	return async (expiredTime = _InitEnv.PROCESS_ENV.RESET_RESOURCE ? 0 : 1) => {
+	return async (
+		expiredTime = _InitEnv.PROCESS_ENV.RESET_RESOURCE
+			? 0
+			: process.env.MODE === 'development'
+			? 0
+			: 60
+	) => {
 		if (!isMainThread || process.env.DISABLE_INTERNAL_CRAWLER || !workerManager)
 			return
 
@@ -78,9 +68,7 @@ const cleanBrowsers = (() => {
 
 		if (_constants3.canUseLinuxChromium && !promiseStore.executablePath) {
 			_ConsoleHandler2.default.log('Create executablePath')
-			promiseStore.executablePath = _chromiummin2.default.executablePath(
-				_constants3.chromiumPath
-			)
+			promiseStore.executablePath = _chromiummin2.default.executablePath(_constants3.chromiumPath)
 		}
 
 		_store.setStore.call(void 0, 'browser', browserStore)
@@ -97,7 +85,7 @@ const cleanBrowsers = (() => {
 
 		try {
 			await pool.exec('scanToCleanBrowsers', [
-				_constants.userDataPath,
+				userDataPath,
 				expiredTime,
 				browserStore,
 			])
@@ -113,16 +101,10 @@ const cleanBrowsers = (() => {
 			setTimeout(() => {
 				exports.cleanBrowsers.call(void 0, 5)
 			}, 300000)
-
-		if (process.env.MODE === 'development')
-			_optionalChain([exports.cleanBrowsers, 'optionalCall', (_) => _(0)])
-		else
-			_optionalChain([exports.cleanBrowsers, 'optionalCall', (_2) => _2(360)])
 	}
-})()
-exports.cleanBrowsers = cleanBrowsers // cleanBrowsers
+})(); exports.cleanBrowsers = cleanBrowsers // cleanBrowsers
 
-const cleanPages = (() => {
+ const cleanPages = (() => {
 	return async () => {
 		if (!isMainThread || !workerManager) return
 
@@ -130,7 +112,7 @@ const cleanPages = (() => {
 		const pool = freePool.pool
 
 		try {
-			await pool.exec('scanToCleanPages', [_constants.pagesPath])
+			await pool.exec('scanToCleanPages', [pagesPath])
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
 		}
@@ -141,14 +123,13 @@ const cleanPages = (() => {
 
 		if (!_constants.SERVER_LESS) {
 			setTimeout(() => {
-				exports.cleanPages.call(void 0)
+				exports.cleanPages.call(void 0, )
 			}, 1800000)
 		}
 	}
-})()
-exports.cleanPages = cleanPages // cleanPages
+})(); exports.cleanPages = cleanPages // cleanPages
 
-const cleanAPIDataCache = (() => {
+ const cleanAPIDataCache = (() => {
 	return async () => {
 		if (!isMainThread || !workerManager) return
 
@@ -156,7 +137,7 @@ const cleanAPIDataCache = (() => {
 		const pool = freePool.pool
 
 		try {
-			await pool.exec('scanToCleanAPIDataCache', [_constants.dataPath])
+			await pool.exec('scanToCleanAPIDataCache', [dataPath])
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
 		}
@@ -167,14 +148,13 @@ const cleanAPIDataCache = (() => {
 
 		if (!_constants.SERVER_LESS) {
 			setTimeout(() => {
-				exports.cleanAPIDataCache.call(void 0)
+				exports.cleanAPIDataCache.call(void 0, )
 			}, 30000)
 		}
 	}
-})()
-exports.cleanAPIDataCache = cleanAPIDataCache // cleanAPIDataCache
+})(); exports.cleanAPIDataCache = cleanAPIDataCache // cleanAPIDataCache
 
-const cleanAPIStoreCache = (() => {
+ const cleanAPIStoreCache = (() => {
 	return async () => {
 		if (!isMainThread || !workerManager) return
 
@@ -182,7 +162,7 @@ const cleanAPIStoreCache = (() => {
 		const pool = freePool.pool
 
 		try {
-			await pool.exec('scanToCleanAPIStoreCache', [_constants.storePath])
+			await pool.exec('scanToCleanAPIStoreCache', [storePath])
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
 		}
@@ -193,14 +173,13 @@ const cleanAPIStoreCache = (() => {
 
 		if (!_constants.SERVER_LESS) {
 			setTimeout(() => {
-				exports.cleanAPIStoreCache.call(void 0)
+				exports.cleanAPIStoreCache.call(void 0, )
 			}, 30000)
 		}
 	}
-})()
-exports.cleanAPIStoreCache = cleanAPIStoreCache // cleanAPIStoreCache
+})(); exports.cleanAPIStoreCache = cleanAPIStoreCache // cleanAPIStoreCache
 
-const cleanOther = (() => {
+ const cleanOther = (() => {
 	return async () => {
 		if (!isMainThread || !workerManager) return
 
@@ -210,21 +189,24 @@ const cleanOther = (() => {
 			const freePool = await workerManager.getFreePool()
 			const pool = freePool.pool
 
-			return pool.exec('deleteResource', [path]).finally(() => {
-				freePool.terminate({
-					force: true,
-				})
+			try {
+				pool.exec('deleteResource', [path])
+			} catch (err) {
+				_ConsoleHandler2.default.error(err)
+			}
+
+			freePool.terminate({
+				force: true,
 			})
 		}
 
 		try {
 			await Promise.all([
-				clean(`${_constants.userDataPath}/wsEndpoint.txt`),
-				clean(`${_constants.workerManagerPath}/counter.txt`),
+				clean(`${userDataPath}/wsEndpoint.txt`),
+				clean(`${workerManagerPath}/counter.txt`),
 			])
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
 		}
 	}
-})()
-exports.cleanOther = cleanOther
+})(); exports.cleanOther = cleanOther

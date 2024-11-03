@@ -1,22 +1,16 @@
-'use strict'
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-var _chokidar = require('chokidar')
-var _chokidar2 = _interopRequireDefault(_chokidar)
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
-var _pm2 = require('pm2')
-var _pm22 = _interopRequireDefault(_pm2)
-var _constants = require('../constants')
-var _ConsoleHandler = require('../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _InitEnv = require('../utils/InitEnv')
+"use strict"; function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _chokidar = require('chokidar'); var _chokidar2 = _interopRequireDefault(_chokidar);
+var _path = require('path'); var _path2 = _interopRequireDefault(_path);
+var _pm2 = require('pm2'); var _pm22 = _interopRequireDefault(_pm2);
+var _constants = require('../constants');
+var _ConsoleHandler = require('../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _InitEnv = require('../utils/InitEnv');
+var _constants3 = require('./constants');
 
-const CLUSTER_INSTANCES =
-	_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES === 'max'
-		? 0
-		: Number(_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES || 2)
+// const CLUSTER_INSTANCES =
+// 	PROCESS_ENV.CLUSTER_INSTANCES === 'max'
+// 		? 0
+// 		: Number(PROCESS_ENV.CLUSTER_INSTANCES || 2)
+const CLUSTER_INSTANCES = 1
 const CLUSTER_KILL_TIMEOUT =
 	_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 2000
 
@@ -42,7 +36,7 @@ _pm22.default.connect(false, (err) => {
 			for (const process of processList) {
 				if (
 					(process.name === 'start-puppeteer-ssr' ||
-						process.name === 'puppeteer-ssr') &&
+						process.name === _constants3.PM2_PROCESS_NAME) &&
 					process.pm_id !== undefined
 				) {
 					_pm22.default.restart(process.pm_id, function (err) {
@@ -63,18 +57,14 @@ _pm22.default.connect(false, (err) => {
 		if (!hasRestarted) {
 			_pm22.default.start(
 				{
-					name: 'puppeteer-ssr',
+					name: _constants3.PM2_PROCESS_NAME,
 					script: `server/${_constants.resourceDirectory}/index.${_constants.resourceExtension}`,
 					instances: CLUSTER_INSTANCES,
 					exec_mode: 'cluster',
 					interpreter:
-						_constants.resourceExtension === 'ts'
-							? './node_modules/.bin/sucrase'
-							: 'node',
+						_constants.resourceExtension === 'ts' ? './node_modules/.bin/sucrase' : 'node',
 					interpreter_args:
-						_constants.resourceExtension === 'ts'
-							? '--require sucrase/register'
-							: '',
+						_constants.resourceExtension === 'ts' ? '--require sucrase/register' : '',
 					wait_ready: true,
 					kill_timeout: CLUSTER_KILL_TIMEOUT,
 					cwd: '.',
@@ -92,6 +82,10 @@ _pm22.default.connect(false, (err) => {
 								__dirname,
 								`../../${_constants.resourceDirectory}/**/*.${_constants.resourceExtension}`
 							),
+							_path2.default.resolve(
+								__dirname,
+								`../../${_constants.resourceDirectory}/*.${_constants.resourceExtension}`
+							),
 						],
 						{
 							ignored: /$^/,
@@ -99,8 +93,12 @@ _pm22.default.connect(false, (err) => {
 						}
 					) // /$^/ is match nothing
 
+					let timeout
 					watcher.on('change', function (files) {
-						_pm22.default.reload('puppeteer-ssr', () => {})
+						if (timeout) clearTimeout(timeout)
+						timeout = setTimeout(() => {
+							_pm22.default.reload(_constants3.PM2_PROCESS_NAME, () => {})
+						}, 100)
 					})
 				}
 			)

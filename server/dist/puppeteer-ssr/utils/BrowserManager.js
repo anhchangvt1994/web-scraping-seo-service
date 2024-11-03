@@ -1,46 +1,34 @@
-'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
-function _optionalChain(ops) {
-	let lastAccessLHS = undefined
-	let value = ops[0]
-	let i = 1
-	while (i < ops.length) {
-		const op = ops[i]
-		const fn = ops[i + 1]
-		i += 2
-		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
-			return undefined
-		}
-		if (op === 'access' || op === 'optionalAccess') {
-			lastAccessLHS = value
-			value = fn(value)
-		} else if (op === 'call' || op === 'optionalCall') {
-			value = fn((...args) => value.call(lastAccessLHS, ...args))
-			lastAccessLHS = undefined
-		}
-	}
-	return value
-}
-var _chromiummin = require('@sparticuz/chromium-min')
-var _chromiummin2 = _interopRequireDefault(_chromiummin)
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _chromiummin = require('@sparticuz/chromium-min'); var _chromiummin2 = _interopRequireDefault(_chromiummin);
+var _path = require('path'); var _path2 = _interopRequireDefault(_path);
 
-var _constants = require('../../constants')
-var _serverconfig = require('../../server.config')
-var _serverconfig2 = _interopRequireDefault(_serverconfig)
-var _store = require('../../store')
-var _ConsoleHandler = require('../../utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _FileHandler = require('../../utils/FileHandler')
-var _WorkerManager = require('../../utils/WorkerManager')
-var _WorkerManager2 = _interopRequireDefault(_WorkerManager)
 
-var _constants3 = require('../constants')
+
+
+
+
+var _constants = require('../../constants');
+var _serverconfig = require('../../server.config'); var _serverconfig2 = _interopRequireDefault(_serverconfig);
+var _store = require('../../store');
+var _ConsoleHandler = require('../../utils/ConsoleHandler'); var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler);
+var _FileHandler = require('../../utils/FileHandler');
+var _InitEnv = require('../../utils/InitEnv');
+var _PathHandler = require('../../utils/PathHandler');
+var _WorkerManager = require('../../utils/WorkerManager'); var _WorkerManager2 = _interopRequireDefault(_WorkerManager);
+
+
+
+
+
+var _constants3 = require('../constants');
 const { parentPort, isMainThread } = require('worker_threads')
+
+const userDataPath = _PathHandler.getUserDataPath.call(void 0, )
+
+
+
+
+
+
 
 const workerManager = (() => {
 	if (!isMainThread) return
@@ -94,10 +82,7 @@ const _getBrowserForSubThreads = (() => {
 	const _get = async () => {
 		if (isMainThread) return
 
-		const wsEndpoint = _FileHandler.getTextData.call(
-			void 0,
-			`${_constants.userDataPath}/wsEndpoint.txt`
-		)
+		const wsEndpoint = _FileHandler.getTextData.call(void 0, `${userDataPath}/wsEndpoint.txt`)
 
 		if (!wsEndpoint && counter < limit) {
 			counter++
@@ -125,15 +110,13 @@ const _getBrowserForSubThreads = (() => {
 
 let browserManager
 function BrowserManager() {
-	if (process.env.PUPPETEER_SKIP_DOWNLOAD && !_constants3.canUseLinuxChromium)
-		return
+	if (process.env.PUPPETEER_SKIP_DOWNLOAD && !_constants3.canUseLinuxChromium) return
 
 	if (browserManager) return browserManager
 	else browserManager = this
 
 	if (isMainThread) {
-		const userDataDir = () =>
-			`${_constants.userDataPath}/user_data_${Date.now()}`
+		const userDataDir = () => `${userDataPath}/user_data_${Date.now()}`
 		const strUserDataDir = userDataDir()
 		const maxRequestPerBrowser = 10
 		let totalRequests = 0
@@ -146,9 +129,7 @@ function BrowserManager() {
 
 			const selfUserDataDirPath =
 				reserveUserDataDirPath ||
-				`${strUserDataDir}${
-					_serverconfig2.default.isRemoteCrawler ? '_remote' : ''
-				}`
+				`${strUserDataDir}${_serverconfig2.default.isRemoteCrawler ? '_remote' : ''}`
 			reserveUserDataDirPath = `${strUserDataDir}_reserve${
 				_serverconfig2.default.isRemoteCrawler ? '_remote' : ''
 			}`
@@ -169,9 +150,7 @@ function BrowserManager() {
 				try {
 					if (_constants3.canUseLinuxChromium && !promiseStore.executablePath) {
 						_ConsoleHandler2.default.log('Create executablePath')
-						promiseStore.executablePath = _chromiummin2.default.executablePath(
-							_constants3.chromiumPath
-						)
+						promiseStore.executablePath = _chromiummin2.default.executablePath(_constants3.chromiumPath)
 					}
 
 					browserStore.userDataPath = selfUserDataDirPath
@@ -245,31 +224,21 @@ function BrowserManager() {
 			if (browserLaunch) {
 				try {
 					let tabsClosed = 0
-					const browser = await browserLaunch
+					const browser = (await browserLaunch) 
 
 					browserStore.wsEndpoint = browser.wsEndpoint()
 					_store.setStore.call(void 0, 'browser', browserStore)
 
-					_FileHandler.setTextData.call(
-						void 0,
-						`${_constants.userDataPath}/wsEndpoint.txt`,
-						browserStore.wsEndpoint
-					)
+					_FileHandler.setTextData.call(void 0, `${userDataPath}/wsEndpoint.txt`, browserStore.wsEndpoint)
 
 					// let closePageTimeout: NodeJS.Timeout
 					let closeBrowserTimeout
 
 					browser.on('closePage', async (url) => {
 						tabsClosed++
-						const currentWsEndpoint = _store.getStore.call(
-							void 0,
-							'browser'
-						).wsEndpoint
+						const currentWsEndpoint = _store.getStore.call(void 0, 'browser').wsEndpoint
 
-						if (
-							!_constants.SERVER_LESS &&
-							currentWsEndpoint !== browser.wsEndpoint()
-						) {
+						if (!_constants.SERVER_LESS && currentWsEndpoint !== browser.wsEndpoint()) {
 							if (browser.connected)
 								try {
 									// if (closePageTimeout) clearTimeout(closePageTimeout)
@@ -340,7 +309,7 @@ function BrowserManager() {
 
 			totalRequests++
 
-			return browser
+			return browser 
 		} // _get
 
 		const _newPage = async () => {
@@ -353,13 +322,7 @@ function BrowserManager() {
 					return _newPage()
 				}
 
-				const page = await _optionalChain([
-					browser,
-					'optionalAccess',
-					(_) => _.newPage,
-					'optionalCall',
-					(_2) => _2(),
-				])
+				const page = await _optionalChain([browser, 'optionalAccess', _ => _.newPage, 'optionalCall', _2 => _2()])
 
 				if (!page) {
 					browser.close()
@@ -391,7 +354,7 @@ function BrowserManager() {
 			})
 			const browser = await _getBrowserForSubThreads()
 
-			return browser
+			return browser 
 		} // _get
 
 		return {
@@ -400,7 +363,9 @@ function BrowserManager() {
 	}
 }
 
-exports.default = () => {
+exports. default = () => {
+	if (_InitEnv.ENV_MODE === 'development') return
+
 	if (browserManager) return browserManager
 
 	browserManager = BrowserManager()
